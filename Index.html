@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VB Daily</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#F8F8F6; --surface:#FFFFFF; --surface2:#F2F2F0; --border:#E8E8E4; --border2:#D0D0C8;
+  --text:#1A1A18; --muted:#A8A8A0; --secondary:#6B6B65;
+  --red:#D94F3D; --red-soft:#FDF2F0; --green:#2D7D52; --green-soft:#F0F7F3;
+  --blue:#2563A8; --blue-soft:#EEF4FB; --amber:#C17B2A; --amber-soft:#FDF5EA;
+  --purple:#6B4FA0; --purple-soft:#F3F0FA;
+  --r:13px; --rs:9px; --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; max-width:500px; margin:0 auto; }
+
+.hdr { background:var(--surface); padding:18px 18px 0; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.hdr-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.app-title { font-size:22px; font-weight:700; letter-spacing:-.5px; }
+.app-sub { font-size:12px; color:var(--muted); margin-top:1px; }
+.hdr-right { display:flex; align-items:center; gap:8px; }
+.date-chip { font-size:12px; color:var(--secondary); background:var(--surface2); border-radius:20px; padding:5px 12px; font-weight:500; }
+.sync-btn { background:none; border:1px solid var(--border); border-radius:20px; padding:4px 10px; font-size:11px; color:var(--secondary); cursor:pointer; display:flex; align-items:center; gap:4px; }
+.sync-btn:active { opacity:.6; }
+.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+.sync-dot.syncing { background:var(--amber); animation:pulse 1s infinite; }
+.sync-dot.error { background:var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.tabs { display:flex; }
+.tab { flex:1; padding:11px 4px; text-align:center; font-size:12px; font-weight:500; color:var(--muted); border:none; border-bottom:2.5px solid transparent; background:none; cursor:pointer; transition:all .2s; }
+.tab.active { color:var(--text); border-bottom-color:var(--text); font-weight:600; }
+
+.panel { display:none; padding:16px 16px 80px; }
+.panel.active { display:block; }
+
+.card { background:var(--surface); border-radius:var(--r); border:1px solid var(--border); padding:15px; margin-bottom:12px; box-shadow:var(--shadow); }
+.card-label { font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); margin-bottom:11px; }
+
+.irow { display:flex; gap:8px; margin-bottom:8px; }
+.inp { flex:1; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; transition:border-color .2s; }
+.inp:focus { border-color:var(--border2); background:var(--surface); }
+.sel { padding:10px 11px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:13px; color:var(--text); outline:none; cursor:pointer; }
+.btn-main { padding:12px; border-radius:var(--rs); background:var(--text); color:#fff; border:none; font-size:14px; font-weight:600; cursor:pointer; width:100%; transition:opacity .2s; }
+.btn-main:active { opacity:.7; }
+.btn-plus { padding:10px 15px; border-radius:var(--rs); background:var(--text); color:#fff; border:none; font-size:22px; font-weight:300; cursor:pointer; flex-shrink:0; }
+.btn-plus:active { opacity:.7; }
+
+.chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; margin-bottom:12px; }
+.chips::-webkit-scrollbar { display:none; }
+.chip { padding:5px 13px; border-radius:20px; font-size:12px; font-weight:500; white-space:nowrap; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--secondary); transition:all .15s; }
+.chip.active { background:var(--text); color:#fff; border-color:var(--text); }
+
+.prog-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.prog-bar { flex:1; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+.prog-fill { height:100%; background:var(--green); border-radius:2px; transition:width .4s; }
+.prog-txt { font-size:12px; color:var(--muted); white-space:nowrap; }
+
+.todo-item { display:flex; align-items:flex-start; gap:11px; padding:11px 13px; background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:8px; }
+.todo-item.done { opacity:.42; }
+.chk { width:20px; height:20px; border-radius:50%; border:2px solid var(--border2); cursor:pointer; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; transition:all .2s; }
+.chk.on { background:var(--green); border-color:var(--green); }
+.t-body { flex:1; min-width:0; }
+.t-text { font-size:14px; line-height:1.4; }
+.todo-item.done .t-text { text-decoration:line-through; }
+.t-ts { font-size:11px; color:var(--muted); margin-top:3px; }
+.badges { display:flex; gap:4px; margin-top:5px; flex-wrap:wrap; align-items:center; }
+.bdg { font-size:10px; font-weight:600; letter-spacing:.2px; padding:2px 7px; border-radius:10px; }
+.bdg-work { background:var(--blue-soft); color:var(--blue); }
+.bdg-client { background:var(--amber-soft); color:var(--amber); }
+.bdg-personal { background:var(--purple-soft); color:var(--purple); }
+.bdg-other { background:var(--surface2); color:var(--secondary); }
+.bdg-high { background:var(--red-soft); color:var(--red); }
+.bdg-med { background:var(--amber-soft); color:var(--amber); }
+.bdg-low { background:var(--green-soft); color:var(--green); }
+.del-btn { color:var(--muted); background:none; border:none; cursor:pointer; font-size:18px; padding:0 3px; transition:color .15s; flex-shrink:0; }
+.del-btn:hover { color:var(--red); }
+
+.exp-item { display:flex; align-items:center; gap:11px; padding:11px 13px; background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:8px; }
+.cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.e-body { flex:1; min-width:0; }
+.e-note { font-size:13px; color:var(--text); }
+.e-meta { font-size:11px; color:var(--muted); margin-top:2px; }
+.e-amt { font-size:15px; font-weight:700; flex-shrink:0; }
+.e-del { color:var(--muted); background:none; border:none; cursor:pointer; font-size:16px; flex-shrink:0; }
+
+.note-item { background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:10px; overflow:hidden; }
+.note-header { display:flex; align-items:flex-start; gap:10px; padding:12px 13px 8px; }
+.note-tag-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.note-meta-wrap { flex:1; min-width:0; }
+.note-title-row { display:flex; align-items:center; gap:6px; justify-content:space-between; }
+.note-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; flex:1; min-width:0; }
+.note-del { color:var(--muted); background:none; border:none; cursor:pointer; font-size:16px; padding:0; flex-shrink:0; }
+.note-ts { font-size:11px; color:var(--muted); margin-top:3px; }
+.note-preview { font-size:13px; color:var(--secondary); padding:0 13px 11px 31px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+
+.note-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; align-items:flex-end; justify-content:center; }
+.note-overlay.open { display:flex; }
+.note-sheet { background:var(--surface); border-radius:20px 20px 0 0; width:100%; max-width:500px; padding:20px 18px 32px; max-height:92vh; display:flex; flex-direction:column; }
+.sheet-handle { width:38px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 18px; }
+.sheet-title { font-size:16px; font-weight:700; margin-bottom:14px; }
+.sheet-inp { width:100%; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; margin-bottom:10px; }
+.sheet-inp:focus { border-color:var(--border2); background:var(--surface); }
+.sheet-textarea { width:100%; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; resize:none; font-family:inherit; line-height:1.6; flex:1; min-height:140px; margin-bottom:10px; }
+.sheet-textarea:focus { border-color:var(--border2); background:var(--surface); }
+.sheet-row { display:flex; gap:8px; margin-bottom:12px; }
+.sheet-sel { flex:1; padding:10px 11px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:13px; color:var(--text); outline:none; cursor:pointer; }
+
+.sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.sum-card { background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); padding:13px; }
+.s-lbl { font-size:11px; color:var(--muted); margin-bottom:4px; font-weight:500; }
+.s-val { font-size:20px; font-weight:700; letter-spacing:-.5px; }
+.s-red { color:var(--red); } .s-green { color:var(--green); } .s-amber { color:var(--amber); }
+.month-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.mnav-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 14px; cursor:pointer; font-size:18px; }
+.mlabel { font-size:15px; font-weight:600; }
+.cat-row { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
+.cat-nm { font-size:13px; color:var(--secondary); flex:1; }
+.bar-wrap { width:80px; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+.bar-inner { height:100%; border-radius:2px; }
+.cat-amt { font-size:13px; font-weight:600; min-width:65px; text-align:right; }
+
+.empty { text-align:center; padding:28px 0; color:var(--muted); font-size:13px; line-height:1.9; }
+.empty-ic { font-size:30px; margin-bottom:6px; }
+.search-wrap { position:relative; margin-bottom:12px; }
+.search-inp { width:100%; padding:10px 13px 10px 36px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface); font-size:14px; color:var(--text); outline:none; }
+.search-inp:focus { border-color:var(--border2); }
+.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px; pointer-events:none; }
+
+/* Loading overlay */
+.loading-overlay { position:fixed; inset:0; background:rgba(255,255,255,.85); z-index:300; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+.loading-overlay.hide { display:none; }
+.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--text); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-txt { font-size:13px; color:var(--secondary); }
+
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-txt">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="app-title">VB Daily</div>
+      <div class="app-sub">Tasks · Notes · Expenses</div>
+    </div>
+    <div class="hdr-right">
+      <div class="date-chip" id="dateLbl"></div>
+      <button class="sync-btn" onclick="syncAll()" title="Sync กับ Google Sheets">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncTxt">Sync</span>
+      </button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('todo',this)">✓ To-Do</button>
+    <button class="tab" onclick="switchTab('notes',this)">📝 Notes</button>
+    <button class="tab" onclick="switchTab('expense',this)">฿ Expenses</button>
+    <button class="tab" onclick="switchTab('summary',this)">📊 Summary</button>
+  </div>
+</div>
+
+<!-- TODO -->
+<div class="panel active" id="panel-todo">
+  <div class="card">
+    <div class="irow">
+      <input class="inp" id="tInput" placeholder="เพิ่ม task..." onkeydown="if(event.key==='Enter')addTodo()">
+      <button class="btn-plus" onclick="addTodo()">+</button>
+    </div>
+    <div class="irow">
+      <select class="sel" id="tTag"><option value="work">🏢 Work</option><option value="client">🤝 Client</option><option value="personal">👤 Personal</option><option value="other">📌 Other</option></select>
+      <select class="sel" id="tPri"><option value="high">🔴 High</option><option value="med">🟡 Med</option><option value="low">🟢 Low</option></select>
+    </div>
+  </div>
+  <div class="chips" id="tFilters">
+    <div class="chip active" onclick="setF('all',this)">All</div>
+    <div class="chip" onclick="setF('work',this)">Work</div>
+    <div class="chip" onclick="setF('client',this)">Client</div>
+    <div class="chip" onclick="setF('personal',this)">Personal</div>
+    <div class="chip" onclick="setF('pending',this)">Pending</div>
+    <div class="chip" onclick="setF('done',this)">Done ✓</div>
+  </div>
+  <div class="card" style="padding:12px 14px">
+    <div class="prog-row">
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      <div class="prog-txt" id="progTxt">0 / 0</div>
+    </div>
+    <div id="todoList"></div>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="panel" id="panel-notes">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-inp" id="noteSearch" placeholder="ค้นหา note..." oninput="renderNotes()">
+  </div>
+  <div class="chips" id="nFilters">
+    <div class="chip active" onclick="setNF('all',this)">All</div>
+    <div class="chip" onclick="setNF('work',this)">Work</div>
+    <div class="chip" onclick="setNF('client',this)">Client</div>
+    <div class="chip" onclick="setNF('personal',this)">Personal</div>
+    <div class="chip" onclick="setNF('idea',this)">💡 Idea</div>
+    <div class="chip" onclick="setNF('other',this)">Other</div>
+  </div>
+  <button onclick="openNoteSheet()" style="display:block;width:100%;padding:13px;border-radius:var(--rs);background:var(--text);color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;">+ เพิ่ม Note ใหม่</button>
+  <div id="noteList"></div>
+</div>
+
+<!-- EXPENSE -->
+<div class="panel" id="panel-expense">
+  <div class="card">
+    <div class="card-label">เพิ่มรายจ่าย</div>
+    <div class="irow">
+      <input type="number" class="inp" id="eAmt" placeholder="จำนวนเงิน (฿)" style="flex:1.3">
+      <select class="sel" id="eCat">
+        <option value="food">🍜 อาหาร</option>
+        <option value="transport">🚕 เดินทาง</option>
+        <option value="work">💼 งาน</option>
+        <option value="health">💊 สุขภาพ</option>
+        <option value="shopping">🛍 ช้อปปิ้ง</option>
+        <option value="entertainment">🎬 บันเทิง</option>
+        <option value="other">📦 อื่นๆ</option>
+      </select>
+    </div>
+    <input class="inp" id="eNote" placeholder="Note เช่น กาแฟ, แท็กซี่" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')addExp()">
+    <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
+  </div>
+  <div class="card" style="padding:12px 14px">
+    <div class="card-label">วันนี้</div>
+    <div id="expToday"></div>
+  </div>
+  <div class="card" style="padding:12px 14px">
+    <div class="card-label">เดือนนี้ทั้งหมด</div>
+    <div id="expMonth"></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="panel" id="panel-summary">
+  <div class="month-nav">
+    <button class="mnav-btn" onclick="chgM(-1)">‹</button>
+    <div class="mlabel" id="mLabel"></div>
+    <button class="mnav-btn" onclick="chgM(1)">›</button>
+  </div>
+  <div class="sum-grid">
+    <div class="sum-card"><div class="s-lbl">รายจ่ายเดือนนี้</div><div class="s-val s-red" id="sTotal">฿0</div></div>
+    <div class="sum-card"><div class="s-lbl">วันนี้</div><div class="s-val" id="sToday">฿0</div></div>
+    <div class="sum-card"><div class="s-lbl">Tasks เสร็จ</div><div class="s-val s-green" id="sDone">0</div></div>
+    <div class="sum-card"><div class="s-lbl">Tasks ค้าง</div><div class="s-val s-amber" id="sPend">0</div></div>
+  </div>
+  <div class="card" style="padding:14px">
+    <div class="card-label">แยก Category</div>
+    <div id="catBreak"></div>
+  </div>
+  <div class="card" style="padding:14px">
+    <div class="card-label">ค่าใช้จ่ายรายวัน</div>
+    <div id="dayBreak"></div>
+  </div>
+</div>
+
+<!-- NOTE SHEET -->
+<div class="note-overlay" id="noteOverlay" onclick="handleOverlayClick(event)">
+  <div class="note-sheet" id="noteSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">📝 เพิ่ม Note ใหม่</div>
+    <input class="sheet-inp" id="nTitle" placeholder="หัวข้อ note...">
+    <textarea class="sheet-textarea" id="nBody" placeholder="เขียน note ที่นี่..."></textarea>
+    <div class="sheet-row">
+      <select class="sheet-sel" id="nTag">
+        <option value="work">🏢 Work</option>
+        <option value="client">🤝 Client</option>
+        <option value="personal">👤 Personal</option>
+        <option value="idea">💡 Idea</option>
+        <option value="other">📌 Other</option>
+      </select>
+    </div>
+    <button class="btn-main" onclick="saveNote()">บันทึก Note</button>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const API = 'https://script.google.com/macros/s/AKfycbyReL-osgWZSPjWgSEb9ZogvM0z_709ayqBQE4zxHn6tayk52iPNvGBeAHPlIAUPQAx/exec';
+
+// ─── STATE ────────────────────────────────────────────────
+let todos=[], exps=[], notes=[];
+let filt='all', nFilt='all', sumM=new Date();
+let isSyncing=false;
+
+// ─── CONSTANTS ────────────────────────────────────────────
+const CC={food:'#E07B39',transport:'#2563A8',work:'#6B4FA0',health:'#2D7D52',shopping:'#C17B2A',entertainment:'#D94F3D',other:'#888880'};
+const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};
+const TL={work:'Work',client:'Client',personal:'Personal',other:'Other'};
+const PL={high:'High',med:'Med',low:'Low'};
+const NTC={work:'#2563A8',client:'#C17B2A',personal:'#6B4FA0',idea:'#2D7D52',other:'#888880'};
+const NTL={work:'Work',client:'Client',personal:'Personal',idea:'💡 Idea',other:'Other'};
+const NTB={work:'bdg-work',client:'bdg-client',personal:'bdg-personal',idea:'bdg-low',other:'bdg-other'};
+const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const DAYS=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+
+// ─── UTILS ────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmt(n){return Number(n).toLocaleString('th-TH',{maximumFractionDigits:0});}
+function fmtDt(iso){const d=new Date(iso);return `${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`;}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function mStr(d){return d.toISOString().slice(0,7);}
+
+function showToast(msg, duration=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+function setSyncStatus(status){ // 'ok' | 'syncing' | 'error'
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncTxt');
+  dot.className='sync-dot'+(status==='syncing'?' syncing':status==='error'?' error':'');
+  txt.textContent=status==='syncing'?'Sync...':status==='error'?'Error':'Synced';
+}
+
+// ─── GOOGLE SHEETS API ────────────────────────────────────
+async function sheetRead(tab){
+  const url=`${API}?action=read&tab=${encodeURIComponent(tab)}`;
+  const res=await fetch(url);
+  const json=await res.json();
+  return json.data||[];
+}
+async function sheetWrite(tab, rows){
+  const url=`${API}?action=write&tab=${encodeURIComponent(tab)}&data=${encodeURIComponent(JSON.stringify(rows))}`;
+  await fetch(url);
+}
+
+// ─── SERIALIZE / DESERIALIZE ──────────────────────────────
+// todos: [id, text, tag, pri, done, ts]
+function todosToRows(arr){return arr.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts]);}
+function rowsToTodos(rows){return rows.filter(r=>r[0]).map(r=>({id:+r[0],text:String(r[1]),tag:String(r[2]),pri:String(r[3]),done:r[4]==='1',ts:String(r[5])}));}
+
+// exps: [id, amount, cat, note, date]
+function expsToRows(arr){return arr.map(e=>[e.id,e.amount,e.cat,e.note,e.date]);}
+function rowsToExps(rows){return rows.filter(r=>r[0]).map(r=>({id:+r[0],amount:+r[1],cat:String(r[2]),note:String(r[3]),date:String(r[4])}));}
+
+// notes: [id, title, body, tag, ts]
+function notesToRows(arr){return arr.map(n=>[n.id,n.title,n.body,n.tag,n.ts]);}
+function rowsToNotes(rows){return rows.filter(r=>r[0]).map(r=>({id:+r[0],title:String(r[1]),body:String(r[2]),tag:String(r[3]),ts:String(r[4])}));}
+
+// ─── SYNC ─────────────────────────────────────────────────
+async function syncAll(showMsg=true){
+  if(isSyncing)return;
+  isSyncing=true; setSyncStatus('syncing');
+  try {
+    const [tRows,eRows,nRows]=await Promise.all([sheetRead('todos'),sheetRead('expenses'),sheetRead('notes')]);
+    todos=rowsToTodos(tRows);
+    exps=rowsToExps(eRows);
+    notes=rowsToNotes(nRows);
+    if(typeof saveCache==='function')saveCache();
+    setSyncStatus('ok');
+    if(showMsg)showToast('✅ Sync สำเร็จ');
+    renderAll();
+  } catch(err){
+    setSyncStatus('error');
+    showToast('❌ Sync ไม่สำเร็จ — ตรวจสอบ internet');
+  }
+  isSyncing=false;
+}
+
+async function pushTodos(){
+  saveCache();
+  setSyncStatus('syncing');
+  try{ await sheetWrite('todos',todosToRows(todos)); setSyncStatus('ok'); }
+  catch(e){ setSyncStatus('error'); showToast('⚠️ บันทึก Offline — Sync เมื่อพร้อม'); }
+}
+async function pushExps(){
+  saveCache();
+  setSyncStatus('syncing');
+  try{ await sheetWrite('expenses',expsToRows(exps)); setSyncStatus('ok'); }
+  catch(e){ setSyncStatus('error'); showToast('⚠️ บันทึก Offline — Sync เมื่อพร้อม'); }
+}
+async function pushNotes(){
+  saveCache();
+  setSyncStatus('syncing');
+  try{ await sheetWrite('notes',notesToRows(notes)); setSyncStatus('ok'); }
+  catch(e){ setSyncStatus('error'); showToast('⚠️ บันทึก Offline — Sync เมื่อพร้อม'); }
+}
+
+// ─── DATE CHIP ────────────────────────────────────────────
+;(()=>{const d=new Date();document.getElementById('dateLbl').textContent=`${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}.`;})();
+
+// ─── TAB SWITCH ───────────────────────────────────────────
+function switchTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='summary')renderSum();
+}
+
+function renderAll(){renderTodo();renderNotes();renderExp();renderSum();}
+
+// ─── TODO ─────────────────────────────────────────────────
+async function addTodo(){
+  const v=document.getElementById('tInput').value.trim();
+  if(!v)return;
+  todos.unshift({id:Date.now(),text:v,tag:document.getElementById('tTag').value,pri:document.getElementById('tPri').value,done:false,ts:new Date().toISOString()});
+  document.getElementById('tInput').value='';
+  renderTodo();
+  showToast('💾 กำลังบันทึก...',1500);
+  await pushTodos();
+  showToast('✅ บันทึกแล้ว');
+}
+async function togTodo(id){
+  const t=todos.find(x=>x.id===id);
+  if(t){t.done=!t.done;renderTodo();await pushTodos();}
+}
+async function delTodo(id){
+  todos=todos.filter(x=>x.id!==id);
+  renderTodo();await pushTodos();showToast('🗑 ลบแล้ว');
+}
+function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo();}
+
+function renderTodo(){
+  let list=todos;
+  if(filt==='pending')list=todos.filter(t=>!t.done);
+  else if(filt==='done')list=todos.filter(t=>t.done);
+  else if(['work','client','personal','other'].includes(filt))list=todos.filter(t=>t.tag===filt);
+  const done=todos.filter(t=>t.done).length;
+  const pct=todos.length?Math.round(done/todos.length*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=`${done} / ${todos.length} เสร็จ`;
+  const el=document.getElementById('todoList');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task${filt!=='all'?' ในกลุ่มนี้':''}<br><span style="font-size:12px">เพิ่ม task ด้านบน</span></div>`;return;}
+  el.innerHTML=list.map(t=>`
+    <div class="todo-item ${t.done?'done':''}">
+      <div class="chk ${t.done?'on':''}" onclick="togTodo(${t.id})">${t.done?'✓':''}</div>
+      <div class="t-body">
+        <div class="t-text">${esc(t.text)}</div>
+        <div class="badges"><span class="bdg bdg-${t.tag}">${TL[t.tag]}</span><span class="bdg bdg-${t.pri}">${PL[t.pri]}</span></div>
+        <div class="t-ts">🕐 ${fmtDt(t.ts)}</div>
+      </div>
+      <button class="del-btn" onclick="delTodo(${t.id})">×</button>
+    </div>`).join('');
+}
+
+// ─── EXPENSE ──────────────────────────────────────────────
+async function addExp(){
+  const a=parseFloat(document.getElementById('eAmt').value);
+  if(!a||a<=0){document.getElementById('eAmt').focus();return;}
+  const cat=document.getElementById('eCat').value;
+  const note=document.getElementById('eNote').value.trim()||CL[cat].replace(/^\S+ /,'');
+  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString()});
+  document.getElementById('eAmt').value='';document.getElementById('eNote').value='';
+  renderExp();renderSum();
+  showToast('💾 กำลังบันทึก...',1500);
+  await pushExps();
+  showToast('✅ บันทึกแล้ว');
+}
+async function delExp(id){
+  exps=exps.filter(x=>x.id!==id);
+  renderExp();renderSum();await pushExps();showToast('🗑 ลบแล้ว');
+}
+function renderExpList(arr,el){
+  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>`;return;}
+  el.innerHTML=arr.map(e=>`
+    <div class="exp-item">
+      <div class="cat-dot" style="background:${CC[e.cat]}"></div>
+      <div class="e-body">
+        <div class="e-note">${esc(e.note)}</div>
+        <div class="e-meta">${CL[e.cat]} · ${fmtDt(e.date)}</div>
+      </div>
+      <div class="e-amt">฿${fmt(e.amount)}</div>
+      <button class="e-del" onclick="delExp(${e.id})">×</button>
+    </div>`).join('');
+}
+function renderExp(){
+  const today=todayStr(),nowM=mStr(new Date());
+  renderExpList(exps.filter(e=>e.date.slice(0,10)===today),document.getElementById('expToday'));
+  renderExpList(exps.filter(e=>e.date.slice(0,7)===nowM),document.getElementById('expMonth'));
+}
+
+// ─── NOTES ────────────────────────────────────────────────
+function openNoteSheet(){
+  document.getElementById('nTitle').value='';
+  document.getElementById('nBody').value='';
+  document.getElementById('nTag').value='work';
+  document.getElementById('noteOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('nTitle').focus(),200);
+}
+function closeNoteSheet(){document.getElementById('noteOverlay').classList.remove('open');}
+function handleOverlayClick(e){if(e.target===document.getElementById('noteOverlay'))closeNoteSheet();}
+async function saveNote(){
+  const title=document.getElementById('nTitle').value.trim();
+  const body=document.getElementById('nBody').value.trim();
+  if(!title&&!body)return;
+  notes.unshift({id:Date.now(),title:title||'(ไม่มีหัวข้อ)',body,tag:document.getElementById('nTag').value,ts:new Date().toISOString()});
+  closeNoteSheet();renderNotes();
+  showToast('💾 กำลังบันทึก...',1500);
+  await pushNotes();
+  showToast('✅ บันทึกแล้ว');
+}
+async function delNote(id){
+  notes=notes.filter(x=>x.id!==id);
+  renderNotes();await pushNotes();showToast('🗑 ลบแล้ว');
+}
+function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes();}
+function renderNotes(){
+  const q=(document.getElementById('noteSearch').value||'').toLowerCase();
+  let list=notes;
+  if(nFilt!=='all')list=notes.filter(n=>n.tag===nFilt);
+  if(q)list=list.filter(n=>n.title.toLowerCase().includes(q)||n.body.toLowerCase().includes(q));
+  const el=document.getElementById('noteList');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">📝</div>${q?'ไม่พบ note ที่ค้นหา':'ยังไม่มี note'}<br><span style="font-size:12px">กด + เพื่อเพิ่ม note ใหม่</span></div>`;return;}
+  el.innerHTML=list.map(n=>`
+    <div class="note-item">
+      <div class="note-header">
+        <div class="note-tag-dot" style="background:${NTC[n.tag]}"></div>
+        <div class="note-meta-wrap">
+          <div class="note-title-row">
+            <div class="note-title">${esc(n.title)}</div>
+            <button class="note-del" onclick="delNote(${n.id})">×</button>
+          </div>
+          <div class="note-ts">🕐 ${fmtDt(n.ts)} · <span class="bdg ${NTB[n.tag]}" style="font-size:10px;padding:1px 6px;">${NTL[n.tag]}</span></div>
+        </div>
+      </div>
+      ${n.body?`<div class="note-preview">${esc(n.body)}</div>`:''}
+    </div>`).join('');
+}
+
+// ─── SUMMARY ──────────────────────────────────────────────
+function chgM(d){sumM=new Date(sumM.getFullYear(),sumM.getMonth()+d,1);renderSum();}
+function renderSum(){
+  const ms=mStr(sumM);
+  document.getElementById('mLabel').textContent=`${MONTHS[sumM.getMonth()]} ${sumM.getFullYear()+543}`;
+  const mExp=exps.filter(e=>e.date.slice(0,7)===ms);
+  const total=mExp.reduce((s,e)=>s+e.amount,0);
+  const tday=exps.filter(e=>e.date.slice(0,10)===todayStr()).reduce((s,e)=>s+e.amount,0);
+  document.getElementById('sTotal').textContent='฿'+fmt(total);
+  document.getElementById('sToday').textContent='฿'+fmt(tday);
+  document.getElementById('sDone').textContent=todos.filter(t=>t.done).length;
+  document.getElementById('sPend').textContent=todos.filter(t=>!t.done).length;
+  const ct={};mExp.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.amount;});
+  const cs=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
+  const mx=cs[0]?cs[0][1]:1;
+  document.getElementById('catBreak').innerHTML=cs.length
+    ?cs.map(([c,a])=>`<div class="cat-row"><div class="cat-dot" style="background:${CC[c]}"></div><div class="cat-nm">${CL[c]}</div><div class="bar-wrap"><div class="bar-inner" style="width:${Math.round(a/mx*100)}%;background:${CC[c]}"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
+    :`<div class="empty">ยังไม่มีข้อมูล</div>`;
+  const dt={};mExp.forEach(e=>{const d=e.date.slice(8,10);dt[d]=(dt[d]||0)+e.amount;});
+  const ds=Object.entries(dt).sort((a,b)=>+a[0]-+b[0]);
+  const dm=ds.length?Math.max(...ds.map(d=>d[1])):1;
+  document.getElementById('dayBreak').innerHTML=ds.length
+    ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:#1A1A18"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
+    :`<div class="empty">ยังไม่มีข้อมูล</div>`;
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNoteSheet();});
+document.getElementById('nTitle').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('nBody').focus();}});
+
+// ─── LOCAL STORAGE CACHE ─────────────────────────────────
+const TK='vb_todos_v3',EK='vb_exp_v3',NK='vb_notes_v3';
+function loadCache(){
+  todos=JSON.parse(localStorage.getItem(TK)||'[]');
+  exps=JSON.parse(localStorage.getItem(EK)||'[]');
+  notes=JSON.parse(localStorage.getItem(NK)||'[]');
+}
+function saveCache(){
+  localStorage.setItem(TK,JSON.stringify(todos));
+  localStorage.setItem(EK,JSON.stringify(exps));
+  localStorage.setItem(NK,JSON.stringify(notes));
+}
+
+// ─── INIT — load cache first, then sync ──────────────────
+(async()=>{
+  // Show cached data immediately
+  loadCache();
+  renderAll();
+  document.getElementById('loadingOverlay').classList.add('hide');
+  // Then try to sync from Sheets in background
+  try {
+    await syncAll(false);
+    saveCache();
+    showToast('✅ โหลดข้อมูลสำเร็จ');
+  } catch(e){
+    setSyncStatus('error');
+    showToast('⚠️ ใช้ข้อมูล Offline — กด Sync เมื่อ internet พร้อม');
+  }
+})();
+</script>
+</body>
+</html>

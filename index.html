@@ -5,148 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VB Daily</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-:root {
-  --bg:#F8F8F6; --surface:#FFFFFF; --surface2:#F2F2F0; --border:#E8E8E4; --border2:#D0D0C8;
-  --text:#1A1A18; --muted:#A8A8A0; --secondary:#6B6B65;
-  --red:#D94F3D; --red-soft:#FDF2F0; --green:#2D7D52; --green-soft:#F0F7F3;
-  --blue:#2563A8; --blue-soft:#EEF4FB; --amber:#C17B2A; --amber-soft:#FDF5EA;
-  --purple:#6B4FA0; --purple-soft:#F3F0FA;
-  --r:13px; --rs:9px; --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#FAFAF8;--surface:#FFFFFF;--surface2:#F5F0E8;--border:#E8DDD0;--border2:#D4C4B0;
+  --text:#1A1208;--muted:#A89880;--secondary:#6B5840;
+  --walnut:#3D2B1A;--walnut2:#5C3D22;--gold:#D48B3A;--gold2:#C07828;
+  --coral:#D94F2A;--coral-soft:#FDF0EA;
+  --green:#2D6A4F;--green-soft:#EAF4EE;
+  --amber:#C8851A;--amber-soft:#FDF5E6;
+  --purple:#6B4FA0;--purple-soft:#F0EAF8;
+  --forest:#1A3A2A;
+  --grad:linear-gradient(135deg,#3D2B1A 0%,#6B4020 50%,#8B5A2A 100%);
+  --grad-gold:linear-gradient(135deg,#D48B3A 0%,#C07828 100%);
+  --r:14px;--rs:10px;
+  --shadow:0 2px 8px rgba(61,43,26,.08),0 1px 3px rgba(0,0,0,.04);
+  --shadow-warm:0 4px 16px rgba(61,43,26,.12);
 }
-body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; max-width:500px; margin:0 auto; }
-.hdr { background:var(--surface); padding:18px 18px 0; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
-.hdr-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
-.app-title { font-size:22px; font-weight:700; letter-spacing:-.5px; }
-.app-sub { font-size:12px; color:var(--muted); margin-top:1px; }
-.hdr-right { display:flex; align-items:center; gap:8px; }
-.date-chip { font-size:12px; color:var(--secondary); background:var(--surface2); border-radius:20px; padding:5px 12px; font-weight:500; }
-.sync-btn { background:none; border:1px solid var(--border); border-radius:20px; padding:4px 10px; font-size:11px; color:var(--secondary); cursor:pointer; display:flex; align-items:center; gap:4px; }
-.sync-btn:active { opacity:.6; }
-.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
-.sync-dot.syncing { background:var(--amber); animation:pulse 1s infinite; }
-.sync-dot.error { background:var(--red); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-.tabs { display:flex; }
-.tab { flex:1; padding:11px 4px; text-align:center; font-size:12px; font-weight:500; color:var(--muted); border:none; border-bottom:2.5px solid transparent; background:none; cursor:pointer; transition:all .2s; }
-.tab.active { color:var(--text); border-bottom-color:var(--text); font-weight:600; }
-.panel { display:none; padding:16px 16px 80px; }
-.panel.active { display:block; }
-.card { background:var(--surface); border-radius:var(--r); border:1px solid var(--border); padding:15px; margin-bottom:12px; box-shadow:var(--shadow); }
-.card-label { font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); margin-bottom:11px; }
-.irow { display:flex; gap:8px; margin-bottom:8px; }
-.inp { flex:1; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; transition:border-color .2s; }
-.inp:focus { border-color:var(--border2); background:var(--surface); }
-.sel { padding:10px 11px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:13px; color:var(--text); outline:none; cursor:pointer; }
-.btn-main { padding:12px; border-radius:var(--rs); background:var(--text); color:#fff; border:none; font-size:14px; font-weight:600; cursor:pointer; width:100%; transition:opacity .2s; }
-.btn-main:active { opacity:.7; }
-.btn-plus { padding:10px 15px; border-radius:var(--rs); background:var(--text); color:#fff; border:none; font-size:22px; font-weight:300; cursor:pointer; flex-shrink:0; }
-.btn-plus:active { opacity:.7; }
-.chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; margin-bottom:12px; }
-.chips::-webkit-scrollbar { display:none; }
-.chip { padding:5px 13px; border-radius:20px; font-size:12px; font-weight:500; white-space:nowrap; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--secondary); transition:all .15s; }
-.chip.active { background:var(--text); color:#fff; border-color:var(--text); }
-.prog-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-.prog-bar { flex:1; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
-.prog-fill { height:100%; background:var(--green); border-radius:2px; transition:width .4s; }
-.prog-txt { font-size:12px; color:var(--muted); white-space:nowrap; }
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:500px;margin:0 auto;overflow-x:hidden}
 
-/* TODO */
-.todo-item { display:flex; align-items:flex-start; gap:11px; padding:11px 13px; background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:8px; }
-.todo-item.done { opacity:.42; }
-.chk { width:20px; height:20px; border-radius:50%; border:2px solid var(--border2); cursor:pointer; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; transition:all .2s; }
-.chk.on { background:var(--green); border-color:var(--green); }
-.t-body { flex:1; min-width:0; }
-.t-text { font-size:14px; line-height:1.4; }
-.todo-item.done .t-text { text-decoration:line-through; }
-.t-ts { font-size:11px; color:var(--muted); margin-top:3px; }
-.badges { display:flex; gap:4px; margin-top:5px; flex-wrap:wrap; align-items:center; }
-.bdg { font-size:10px; font-weight:600; letter-spacing:.2px; padding:2px 7px; border-radius:10px; }
-.bdg-work { background:var(--blue-soft); color:var(--blue); }
-.bdg-client { background:var(--amber-soft); color:var(--amber); }
-.bdg-personal { background:var(--purple-soft); color:var(--purple); }
-.bdg-other { background:var(--surface2); color:var(--secondary); }
-.bdg-high { background:var(--red-soft); color:var(--red); }
-.bdg-med { background:var(--amber-soft); color:var(--amber); }
-.bdg-low { background:var(--green-soft); color:var(--green); }
-.item-actions { display:flex; gap:4px; flex-shrink:0; }
-.edit-btn { color:var(--blue); background:none; border:none; cursor:pointer; font-size:14px; padding:2px 4px; }
-.del-btn { color:var(--muted); background:none; border:none; cursor:pointer; font-size:18px; padding:0 3px; transition:color .15s; }
-.del-btn:hover { color:var(--red); }
+/* HEADER */
+.hdr{background:var(--grad);padding:18px 18px 0;position:sticky;top:0;z-index:100;border-radius:0 0 24px 24px;box-shadow:0 6px 24px rgba(61,43,26,.25);margin-bottom:4px}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.app-title{font-size:22px;font-weight:800;letter-spacing:-.5px;color:#F5E8D0}
+.app-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.date-chip{font-size:11px;color:#F5E8D0;background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 12px;font-weight:500;transition:background .2s}.date-chip:hover{background:rgba(245,232,208,.28)}.date-chip.filtered{background:rgba(212,139,58,.35);border-color:rgba(212,139,58,.6);color:#FFE0A0}
+.sync-btn{background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.3);border-radius:20px;padding:4px 10px;font-size:11px;color:#F5E8D0;cursor:pointer;display:flex;align-items:center;gap:4px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#A8E6C0}
+.sync-dot.syncing{background:#FFD700;animation:pulse 1s infinite}
+.sync-dot.error{background:#FF6B6B}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;padding-bottom:2px}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:11px;font-weight:500;color:rgba(245,232,208,.45);border:none;border-bottom:2.5px solid transparent;background:none;cursor:pointer;transition:all .2s}
+.tab.active{color:#F5E8D0;border-bottom-color:#D48B3A;font-weight:700;border-radius:0 0 4px 4px}
+
+/* SWIPE PANELS */
+.panels-wrap{overflow:hidden;width:100%;touch-action:pan-y}
+.panels-inner{display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);width:400%}
+.panel{width:25%;flex-shrink:0;padding:16px 16px 80px;min-height:calc(100vh - 120px)}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+
+/* INPUTS */
+.irow{display:flex;gap:8px;margin-bottom:8px}
+.inp{flex:1;padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:14px;color:var(--text);outline:none;transition:all .2s}
+.inp:focus{border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 3px rgba(212,139,58,.1)}
+.sel{padding:10px 11px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text);outline:none;cursor:pointer}
+.btn-main{padding:13px;border-radius:var(--rs);background:var(--grad-gold);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;box-shadow:0 4px 16px rgba(212,139,58,.3)}
+.btn-main:active{opacity:.8}
+.btn-plus{padding:10px 16px;border-radius:var(--rs);background:var(--grad-gold);color:#fff;border:none;font-size:22px;font-weight:700;cursor:pointer;flex-shrink:0;box-shadow:0 4px 14px rgba(212,139,58,.3)}
+.btn-cancel{padding:12px;border-radius:var(--rs);background:var(--surface2);color:var(--secondary);border:1px solid var(--border);font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
+
+/* CHIPS */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;margin-bottom:12px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--secondary);transition:all .15s}
+.chip.active{background:var(--grad-gold);color:#fff;border-color:transparent;font-weight:700;box-shadow:0 2px 10px rgba(212,139,58,.25)}
+
+/* PROGRESS */
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.prog-bar{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--grad-gold);border-radius:3px;transition:width .4s}
+.prog-txt{font-size:12px;color:var(--muted);white-space:nowrap;font-weight:600}
+
+/* TODO ITEMS */
+.todo-item{display:flex;align-items:flex-start;gap:11px;padding:12px 13px;background:var(--surface);border-radius:var(--rs);border:1px solid var(--border);border-left:3px solid var(--gold);margin-bottom:8px;box-shadow:var(--shadow)}
+.todo-item.pri-high{border-left-color:var(--coral)}
+.todo-item.pri-med{border-left-color:var(--amber)}
+.todo-item.pri-low{border-left-color:var(--green)}
+.todo-item.done{opacity:.45}
+.chk{width:21px;height:21px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;transition:all .2s}
+.chk.on{background:var(--grad-gold);border-color:transparent}
+.t-body{flex:1;min-width:0}
+.t-text{font-size:14px;line-height:1.4;font-weight:500}
+.todo-item.done .t-text{text-decoration:line-through}
+.t-ts{font-size:11px;color:var(--muted);margin-top:3px}
+.badges{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.bdg{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.bdg-work{background:#E8EEF8;color:#2A4A8A}
+.bdg-client{background:var(--amber-soft);color:var(--amber)}
+.bdg-personal{background:var(--purple-soft);color:var(--purple)}
+.bdg-other{background:var(--surface2);color:var(--secondary)}
+.bdg-high{background:var(--coral-soft);color:var(--coral)}
+.bdg-med{background:var(--amber-soft);color:var(--amber)}
+.bdg-low{background:var(--green-soft);color:var(--green)}
+.item-actions{display:flex;gap:2px;flex-shrink:0}
+.edit-btn{color:var(--gold);background:none;border:none;cursor:pointer;font-size:14px;padding:3px 4px;border-radius:6px}
+.del-btn{color:var(--muted);background:none;border:none;cursor:pointer;font-size:18px;padding:1px 3px;border-radius:6px}
 
 /* EXPENSE */
-.exp-item { display:flex; align-items:center; gap:11px; padding:11px 13px; background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:8px; }
-.cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.e-body { flex:1; min-width:0; }
-.e-note { font-size:13px; color:var(--text); }
-.e-meta { font-size:11px; color:var(--muted); margin-top:2px; }
-.e-amt { font-size:15px; font-weight:700; flex-shrink:0; }
-.e-actions { display:flex; gap:4px; flex-shrink:0; }
-.e-edit { color:var(--blue); background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; }
-.e-del { color:var(--muted); background:none; border:none; cursor:pointer; font-size:16px; }
+.exp-item{display:flex;align-items:center;gap:11px;padding:12px 13px;background:var(--surface);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:8px;box-shadow:var(--shadow)}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.e-body{flex:1;min-width:0}
+.e-note{font-size:13px;color:var(--text);font-weight:500}
+.e-meta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pay-badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px}
+.pay-cash{background:var(--green-soft);color:var(--green)}
+.pay-ktc{background:#E8EEF8;color:#2A4A8A}
+.pay-the1{background:var(--amber-soft);color:var(--amber)}
+.e-amt{font-size:15px;font-weight:800;flex-shrink:0}
+.e-actions{display:flex;gap:2px;flex-shrink:0}
+.e-edit{color:var(--gold);background:none;border:none;cursor:pointer;font-size:13px;padding:3px 4px}
+.e-del{color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px}
 
 /* NOTES */
-.note-item { background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); margin-bottom:10px; overflow:hidden; }
-.note-header { display:flex; align-items:flex-start; gap:10px; padding:12px 13px 8px; }
-.note-tag-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:4px; }
-.note-meta-wrap { flex:1; min-width:0; }
-.note-title-row { display:flex; align-items:center; gap:6px; justify-content:space-between; }
-.note-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.3; flex:1; min-width:0; }
-.note-actions { display:flex; gap:4px; flex-shrink:0; }
-.note-edit { color:var(--blue); background:none; border:none; cursor:pointer; font-size:13px; padding:2px 4px; }
-.note-del { color:var(--muted); background:none; border:none; cursor:pointer; font-size:16px; padding:0; }
-.note-ts { font-size:11px; color:var(--muted); margin-top:3px; }
-.note-preview { font-size:13px; color:var(--secondary); padding:0 13px 11px 31px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
-
-/* UNIVERSAL BOTTOM SHEET */
-.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; align-items:flex-end; justify-content:center; }
-.overlay.open { display:flex; }
-.sheet { background:var(--surface); border-radius:20px 20px 0 0; width:100%; max-width:500px; padding:20px 18px 32px; max-height:92vh; display:flex; flex-direction:column; overflow-y:auto; }
-.sheet-handle { width:38px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 18px; flex-shrink:0; }
-.sheet-title { font-size:16px; font-weight:700; margin-bottom:14px; flex-shrink:0; }
-.sheet-inp { width:100%; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; margin-bottom:10px; }
-.sheet-inp:focus { border-color:var(--border2); background:var(--surface); }
-.sheet-textarea { width:100%; padding:11px 13px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:14px; color:var(--text); outline:none; resize:none; font-family:inherit; line-height:1.6; min-height:140px; margin-bottom:10px; }
-.sheet-textarea:focus { border-color:var(--border2); background:var(--surface); }
-.sheet-row { display:flex; gap:8px; margin-bottom:12px; }
-.sheet-sel { flex:1; padding:10px 11px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface2); font-size:13px; color:var(--text); outline:none; cursor:pointer; }
-.btn-cancel { padding:12px; border-radius:var(--rs); background:var(--surface2); color:var(--secondary); border:1px solid var(--border); font-size:14px; font-weight:600; cursor:pointer; width:100%; margin-top:8px; }
+.note-item{background:var(--surface);border-radius:var(--rs);border:1px solid var(--border);border-left:3px solid var(--gold);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.note-header{display:flex;align-items:flex-start;gap:10px;padding:12px 13px 8px}
+.note-tag-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.note-meta-wrap{flex:1;min-width:0}
+.note-title-row{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.note-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;flex:1;min-width:0}
+.note-actions{display:flex;gap:2px;flex-shrink:0}
+.note-edit{color:var(--teal);background:none;border:none;cursor:pointer;font-size:13px;padding:3px 4px}
+.note-del{color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 3px}
+.note-ts{font-size:11px;color:var(--muted);margin-top:3px}
+.note-preview{font-size:13px;color:var(--secondary);padding:0 13px 12px 31px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 
 /* SUMMARY */
-.sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
-.sum-card { background:var(--surface); border-radius:var(--rs); border:1px solid var(--border); padding:13px; }
-.s-lbl { font-size:11px; color:var(--muted); margin-bottom:4px; font-weight:500; }
-.s-val { font-size:20px; font-weight:700; letter-spacing:-.5px; }
-.s-red { color:var(--red); } .s-green { color:var(--green); } .s-amber { color:var(--amber); }
-.month-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.mnav-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 14px; cursor:pointer; font-size:18px; }
-.mlabel { font-size:15px; font-weight:600; }
-.cat-row { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
-.cat-nm { font-size:13px; color:var(--secondary); flex:1; }
-.bar-wrap { width:80px; height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
-.bar-inner { height:100%; border-radius:2px; }
-.cat-amt { font-size:13px; font-weight:600; min-width:65px; text-align:right; }
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sum-card{border-radius:var(--rs);padding:14px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden}
+.sum-card::after{content:'tap ›';position:absolute;right:10px;bottom:10px;font-size:9px;font-weight:700;opacity:.35;text-transform:uppercase;letter-spacing:.5px;color:var(--secondary)}
+.sum-card:active{transform:scale(.96)}
+.sc-coral{background:linear-gradient(135deg,#FDF0EA,#FAE8DC);border:1px solid #EEC8A8}
+.sc-teal{background:linear-gradient(135deg,#EAF4EE,#DFF0E6);border:1px solid #A8D8B8}
+.sc-blue{background:linear-gradient(135deg,#FDF8EE,#FAF0DC);border:1px solid #E8C878}
+.sc-purple{background:linear-gradient(135deg,#F0EAF8,#E8E0F4);border:1px solid #C8A8E0}
+.sc-amber{background:linear-gradient(135deg,#FDF5E6,#FAF0D8);border:1px solid #E8C870}
+.s-lbl{font-size:11px;color:var(--secondary);margin-bottom:5px;font-weight:600}
+.s-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.sv-coral{color:#C04020}.sv-teal{color:var(--green)}.sv-blue{color:#8B5A18}.sv-purple{color:var(--purple)}.sv-amber{color:var(--amber)}
+.s-hint{font-size:10px;color:var(--muted);margin-top:3px}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mnav-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:7px 16px;cursor:pointer;font-size:18px;box-shadow:var(--shadow)}
+.mlabel{font-size:15px;font-weight:700}
+.cat-row{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.cat-nm{font-size:13px;color:var(--secondary);flex:1;font-weight:500}
+.bar-wrap{width:80px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.bar-inner{height:100%;border-radius:3px}
+.cat-amt{font-size:13px;font-weight:700;min-width:65px;text-align:right}
 
-.empty { text-align:center; padding:28px 0; color:var(--muted); font-size:13px; line-height:1.9; }
-.empty-ic { font-size:30px; margin-bottom:6px; }
-.search-wrap { position:relative; margin-bottom:12px; }
-.search-inp { width:100%; padding:10px 13px 10px 36px; border-radius:var(--rs); border:1.5px solid var(--border); background:var(--surface); font-size:14px; color:var(--text); outline:none; }
-.search-inp:focus { border-color:var(--border2); }
-.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px; pointer-events:none; }
-.loading-overlay { position:fixed; inset:0; background:rgba(255,255,255,.85); z-index:300; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
-.loading-overlay.hide { display:none; }
-.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--text); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.loading-txt { font-size:13px; color:var(--secondary); }
-.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
-.toast.show { opacity:1; }
+/* MISC */
+.empty{text-align:center;padding:32px 0;color:var(--muted);font-size:13px;line-height:2}
+.empty-ic{font-size:32px;margin-bottom:8px}
+.search-wrap{position:relative;margin-bottom:12px}
+.search-inp{width:100%;padding:11px 13px 11px 38px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface);font-size:14px;color:var(--text);outline:none;transition:all .2s}
+.search-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,139,58,.1)}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(26,31,46,.5);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:500px;padding:20px 18px 36px;max-height:92vh;display:flex;flex-direction:column;overflow-y:auto;box-shadow:0 -8px 32px rgba(61,43,26,.15),0 -1px 0 var(--border)}
+.sheet-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;flex-shrink:0}
+.sheet-title{font-size:17px;font-weight:800;margin-bottom:16px;flex-shrink:0;color:var(--walnut)}
+.sheet-inp{width:100%;padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:14px;color:var(--text);outline:none;margin-bottom:10px;transition:all .2s}
+.sheet-inp:focus{border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 3px rgba(212,139,58,.1)}
+.sheet-textarea{width:100%;padding:11px 13px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:14px;color:var(--text);outline:none;resize:none;font-family:inherit;line-height:1.6;min-height:140px;margin-bottom:10px;transition:all .2s}
+.sheet-textarea:focus{border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 3px rgba(212,139,58,.1)}
+.sheet-row{display:flex;gap:8px;margin-bottom:12px}
+.sheet-sel{flex:1;padding:10px 11px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text);outline:none;cursor:pointer}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(250,250,248,.95);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.loading-overlay.hide{display:none}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--walnut);font-weight:600;letter-spacing:.3px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--grad);color:#F5E8D0;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(61,43,26,.3)}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <div class="loading-txt">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+  <div class="loading-txt">กำลังโหลดข้อมูล...</div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -154,7 +189,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
   <div class="hdr-top">
     <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses</div></div>
     <div class="hdr-right">
-      <div class="date-chip" id="dateLbl"></div>
+      <div class="date-chip" id="dateLbl" onclick="openDatePicker()" title="กรองตามวันที่" style="cursor:pointer;user-select:none"></div>
+      <input type="date" id="datePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0" onchange="onDateChange(this.value)">
       <button class="sync-btn" onclick="syncAll()">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncTxt">Sync</span>
@@ -162,15 +198,18 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
     </div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('todo',this)">✓ To-Do</button>
-    <button class="tab" onclick="switchTab('notes',this)">📝 Notes</button>
-    <button class="tab" onclick="switchTab('expense',this)">฿ Expenses</button>
-    <button class="tab" onclick="switchTab('summary',this)">📊 Summary</button>
+    <button class="tab active" onclick="goTab(0)">✓ To-Do</button>
+    <button class="tab" onclick="goTab(1)">📝 Notes</button>
+    <button class="tab" onclick="goTab(2)">฿ Expenses</button>
+    <button class="tab" onclick="goTab(3)">📊 Summary</button>
   </div>
 </div>
 
+<div class="panels-wrap" id="panelsWrap">
+<div class="panels-inner" id="panelsInner">
+
 <!-- TODO -->
-<div class="panel active" id="panel-todo">
+<div class="panel" id="panel-todo">
   <div class="card">
     <div class="irow">
       <input class="inp" id="tInput" placeholder="เพิ่ม task..." onkeydown="if(event.key==='Enter')addTodo()">
@@ -187,13 +226,10 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
     <div class="chip" onclick="setF('client',this)">Client</div>
     <div class="chip" onclick="setF('personal',this)">Personal</div>
     <div class="chip" onclick="setF('pending',this)">Pending</div>
-    <div class="chip" onclick="setF('done',this)">Done ✓</div>
+    <div class="chip" onclick="setF('done',this)">Done</div>
   </div>
   <div class="card" style="padding:12px 14px">
-    <div class="prog-row">
-      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-      <div class="prog-txt" id="progTxt">0 / 0</div>
-    </div>
+    <div class="prog-row"><div class="prog-bar"><div class="prog-fill" id="progFill"></div></div><div class="prog-txt" id="progTxt">0/0</div></div>
     <div id="todoList"></div>
   </div>
 </div>
@@ -212,7 +248,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
     <div class="chip" onclick="setNF('idea',this)">💡 Idea</div>
     <div class="chip" onclick="setNF('other',this)">Other</div>
   </div>
-  <button onclick="openNoteSheet(null)" style="display:block;width:100%;padding:13px;border-radius:var(--rs);background:var(--text);color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;">+ เพิ่ม Note ใหม่</button>
+  <button onclick="openNoteSheet(null)" style="display:block;width:100%;padding:13px;border-radius:var(--rs);background:var(--grad-gold);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;box-shadow:0 4px 14px rgba(212,139,58,.3)">+ เพิ่ม Note ใหม่</button>
   <div id="noteList"></div>
 </div>
 
@@ -221,7 +257,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
   <div class="card">
     <div class="card-label">เพิ่มรายจ่าย</div>
     <div class="irow">
-      <input type="number" class="inp" id="eAmt" placeholder="จำนวนเงิน (฿)" style="flex:1.3">
+      <input type="number" class="inp" id="eAmt" placeholder="จำนวนเงิน (฿)" style="flex:1.2">
       <select class="sel" id="eCat">
         <option value="food">🍜 อาหาร</option><option value="transport">🚕 เดินทาง</option>
         <option value="work">💼 งาน</option><option value="health">💊 สุขภาพ</option>
@@ -229,7 +265,14 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
         <option value="other">📦 อื่นๆ</option>
       </select>
     </div>
-    <input class="inp" id="eNote" placeholder="Note เช่น กาแฟ, แท็กซี่" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')addExp()">
+    <div class="irow">
+      <input class="inp" id="eNote" placeholder="Note เช่น กาแฟ, แท็กซี่" onkeydown="if(event.key==='Enter')addExp()">
+      <select class="sel" id="ePay">
+        <option value="cash">💵 เงินสด</option>
+        <option value="ktc">💳 KTC</option>
+        <option value="the1">🌟 The 1</option>
+      </select>
+    </div>
     <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
   </div>
   <div class="card" style="padding:12px 14px"><div class="card-label">วันนี้</div><div id="expToday"></div></div>
@@ -244,51 +287,54 @@ body { font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',san
     <button class="mnav-btn" onclick="chgM(1)">›</button>
   </div>
   <div class="sum-grid">
-    <div class="sum-card"><div class="s-lbl">รายจ่ายเดือนนี้</div><div class="s-val s-red" id="sTotal">฿0</div></div>
-    <div class="sum-card"><div class="s-lbl">วันนี้</div><div class="s-val" id="sToday">฿0</div></div>
-    <div class="sum-card"><div class="s-lbl">Tasks เสร็จ</div><div class="s-val s-green" id="sDone">0</div></div>
-    <div class="sum-card"><div class="s-lbl">Tasks ค้าง</div><div class="s-val s-amber" id="sPend">0</div></div>
+    <div class="sum-card sc-coral" onclick="goTab(0)"><div class="s-lbl">Tasks ค้าง</div><div class="s-val sv-coral" id="sPend">0</div><div class="s-hint">กดไปที่ To-Do</div></div>
+    <div class="sum-card sc-teal" onclick="goTab(0)"><div class="s-lbl">Tasks เสร็จ</div><div class="s-val sv-teal" id="sDone">0</div><div class="s-hint">กดไปที่ To-Do</div></div>
+    <div class="sum-card sc-blue" onclick="goTab(2)"><div class="s-lbl">รายจ่ายเดือนนี้</div><div class="s-val sv-blue" id="sTotal">฿0</div><div class="s-hint">กดไปที่ Expenses</div></div>
+    <div class="sum-card sc-amber" onclick="goTab(2)"><div class="s-lbl">วันนี้</div><div class="s-val sv-amber" id="sToday">฿0</div><div class="s-hint">กดไปที่ Expenses</div></div>
+    <div class="sum-card sc-purple" onclick="goTab(1)" style="grid-column:span 2"><div class="s-lbl">Notes ทั้งหมด</div><div class="s-val sv-purple" id="sNotes">0</div><div class="s-hint">กดไปที่ Notes</div></div>
   </div>
   <div class="card" style="padding:14px"><div class="card-label">แยก Category</div><div id="catBreak"></div></div>
   <div class="card" style="padding:14px"><div class="card-label">ค่าใช้จ่ายรายวัน</div><div id="dayBreak"></div></div>
 </div>
 
-<!-- UNIVERSAL EDIT SHEET -->
-<div class="overlay" id="editOverlay" onclick="handleOvClick(event,'editOverlay')">
-  <div class="sheet" id="editSheet">
+</div><!-- panels-inner -->
+</div><!-- panels-wrap -->
+
+<!-- EDIT OVERLAY -->
+<div class="overlay" id="editOverlay" onclick="if(event.target===this)closeOverlay()">
+  <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="editTitle">แก้ไข</div>
     <div id="editBody"></div>
-    <button class="btn-main" id="editSaveBtn" onclick="saveEdit()">💾 บันทึก</button>
-    <button class="btn-cancel" onclick="closeOverlay('editOverlay')">ยกเลิก</button>
+    <button class="btn-main" onclick="saveEdit()">💾 บันทึก</button>
+    <button class="btn-cancel" onclick="closeOverlay()">ยกเลิก</button>
   </div>
 </div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbyReL-osgWZSPjWgSEb9ZogvM0z_709ayqBQE4zxHn6tayk52iPNvGBeAHPlIAUPQAx/exec';
-const TK='vb_todos_v3',EK='vb_exp_v3',NK='vb_notes_v3';
+const TK='vb_todos_v4',EK='vb_exp_v4',NK='vb_notes_v4';
+let todos=[],exps=[],notes=[],filt='all',nFilt='all',sumM=new Date(),isSyncing=false;
+let editMode=null,editId=null,curTab=0;
 
-let todos=[], exps=[], notes=[];
-let filt='all', nFilt='all', sumM=new Date();
-let isSyncing=false;
-let editMode=null, editId=null; // editMode: 'todo'|'note'|'exp'
-
-const CC={food:'#E07B39',transport:'#2563A8',work:'#6B4FA0',health:'#2D7D52',shopping:'#C17B2A',entertainment:'#D94F3D',other:'#888880'};
+const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#00A86B',shopping:'#F59E0B',entertainment:'#F05A3A',other:'#9BA3B0'};
 const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};
 const TL={work:'Work',client:'Client',personal:'Personal',other:'Other'};
 const PL={high:'High',med:'Med',low:'Low'};
-const NTC={work:'#2563A8',client:'#C17B2A',personal:'#6B4FA0',idea:'#2D7D52',other:'#888880'};
+const NTC={work:'#3B6FE8',client:'#F59E0B',personal:'#8B5CF6',idea:'#00A86B',other:'#9BA3B0'};
 const NTL={work:'Work',client:'Client',personal:'Personal',idea:'💡 Idea',other:'Other'};
 const NTB={work:'bdg-work',client:'bdg-client',personal:'bdg-personal',idea:'bdg-low',other:'bdg-other'};
+const PAYMAP={cash:'💵 เงินสด',ktc:'💳 KTC',the1:'🌟 The 1'};
+const PAYBDG={cash:'pay-cash',ktc:'pay-ktc',the1:'pay-the1'};
 const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const DAYS=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmt(n){return Number(n).toLocaleString('th-TH',{maximumFractionDigits:0});}
-function fmtDt(iso){const d=new Date(iso);return `${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`;}
-function todayStr(){return new Date().toISOString().slice(0,10);}
-function mStr(d){return d.toISOString().slice(0,7);}
-function showToast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmt(n){return Number(n).toLocaleString('th-TH',{maximumFractionDigits:0})}
+function fmtDt(iso){const d=new Date(iso);return `${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function mStr(d){return d.toISOString().slice(0,7)}
+function showToast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
 function setSyncStatus(s){
   const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt');
   dot.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
@@ -296,278 +342,265 @@ function setSyncStatus(s){
 }
 
 // CACHE
-function loadCache(){todos=JSON.parse(localStorage.getItem(TK)||'[]');exps=JSON.parse(localStorage.getItem(EK)||'[]');notes=JSON.parse(localStorage.getItem(NK)||'[]');}
-function saveCache(){localStorage.setItem(TK,JSON.stringify(todos));localStorage.setItem(EK,JSON.stringify(exps));localStorage.setItem(NK,JSON.stringify(notes));}
+function loadCache(){todos=JSON.parse(localStorage.getItem(TK)||'[]');exps=JSON.parse(localStorage.getItem(EK)||'[]');notes=JSON.parse(localStorage.getItem(NK)||'[]')}
+function saveCache(){localStorage.setItem(TK,JSON.stringify(todos));localStorage.setItem(EK,JSON.stringify(exps));localStorage.setItem(NK,JSON.stringify(notes))}
 
-// SHEETS API
-async function sheetRead(tab){const r=await fetch(`${API}?action=read&tab=${encodeURIComponent(tab)}`);const j=await r.json();return j.data||[];}
-async function sheetWrite(tab,rows){await fetch(`${API}?action=write&tab=${encodeURIComponent(tab)}&data=${encodeURIComponent(JSON.stringify(rows))}`);}
-
-function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts]);}
-function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:x[4]==='1',ts:String(x[5])}));}
-function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date]);}
-function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4])}));}
-function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts]);}
-function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4])}));}
+// SHEETS
+async function sheetRead(tab){const r=await fetch(`${API}?action=read&tab=${encodeURIComponent(tab)}`);const j=await r.json();return j.data||[]}
+async function sheetWrite(tab,rows){await fetch(`${API}?action=write&tab=${encodeURIComponent(tab)}&data=${encodeURIComponent(JSON.stringify(rows))}`)}
+function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}
+function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:x[4]==='1',ts:String(x[5])}))}
+function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash'])}
+function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash')}))}
+function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts])}
+function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4])}))}
 
 async function syncAll(showMsg=true){
-  if(isSyncing)return; isSyncing=true; setSyncStatus('syncing');
+  if(isSyncing)return;isSyncing=true;setSyncStatus('syncing');
   try{
-    const [tR,eR,nR]=await Promise.all([sheetRead('todos'),sheetRead('expenses'),sheetRead('notes')]);
+    const[tR,eR,nR]=await Promise.all([sheetRead('todos'),sheetRead('expenses'),sheetRead('notes')]);
     todos=rowsToTodos(tR);exps=rowsToExps(eR);notes=rowsToNotes(nR);
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
-  }catch(e){setSyncStatus('error');showToast('❌ Sync ไม่สำเร็จ');}
+  }catch(e){setSyncStatus('error');showToast('❌ Sync ไม่สำเร็จ')}
   isSyncing=false;
 }
-async function pushTodos(){saveCache();setSyncStatus('syncing');try{await sheetWrite('todos',todosToRows(todos));setSyncStatus('ok');}catch(e){setSyncStatus('error');showToast('⚠️ บันทึก Offline');}}
-async function pushExps(){saveCache();setSyncStatus('syncing');try{await sheetWrite('expenses',expsToRows(exps));setSyncStatus('ok');}catch(e){setSyncStatus('error');showToast('⚠️ บันทึก Offline');}}
-async function pushNotes(){saveCache();setSyncStatus('syncing');try{await sheetWrite('notes',notesToRows(notes));setSyncStatus('ok');}catch(e){setSyncStatus('error');showToast('⚠️ บันทึก Offline');}}
+async function pushTodos(){saveCache();setSyncStatus('syncing');try{await sheetWrite('todos',todosToRows(todos));setSyncStatus('ok')}catch(e){setSyncStatus('error');showToast('⚠️ Offline')}}
+async function pushExps(){saveCache();setSyncStatus('syncing');try{await sheetWrite('expenses',expsToRows(exps));setSyncStatus('ok')}catch(e){setSyncStatus('error');showToast('⚠️ Offline')}}
+async function pushNotes(){saveCache();setSyncStatus('syncing');try{await sheetWrite('notes',notesToRows(notes));setSyncStatus('ok')}catch(e){setSyncStatus('error');showToast('⚠️ Offline')}}
 
-;(()=>{const d=new Date();document.getElementById('dateLbl').textContent=`${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}.`;})();
+// DATE
 
-function switchTab(name,el){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');el.classList.add('active');
-  if(name==='summary')renderSum();
+// DATE FILTER
+let filterDate = null; // null = today (no filter label change), string = specific date
+
+function todayLabel(){
+  const d=new Date();
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}.`;
 }
-function renderAll(){renderTodo();renderNotes();renderExp();renderSum();}
+function fmtDateLabel(str){
+  const d=new Date(str+'T00:00:00');
+  return `📅 ${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}. ${d.getFullYear()+543}`;
+}
+document.getElementById('dateLbl').textContent=todayLabel();
 
-// ── OVERLAY ──
-function closeOverlay(id){document.getElementById(id).classList.remove('open');}
-function handleOvClick(e,id){if(e.target===document.getElementById(id))closeOverlay(id);}
+function openDatePicker(){
+  const picker=document.getElementById('datePicker');
+  // set max = today
+  picker.max=new Date().toISOString().slice(0,10);
+  if(filterDate) picker.value=filterDate;
+  else picker.value=new Date().toISOString().slice(0,10);
+  picker.showPicker ? picker.showPicker() : picker.click();
+}
 
-// ── EDIT SHEET ──
+function onDateChange(val){
+  const today=new Date().toISOString().slice(0,10);
+  const lbl=document.getElementById('dateLbl');
+  if(!val || val===today){
+    filterDate=null;
+    lbl.textContent=todayLabel();
+    lbl.classList.remove('filtered');
+    showToast('📅 กลับมาดูวันนี้');
+  } else {
+    filterDate=val;
+    lbl.textContent=fmtDateLabel(val)+' ✕';
+    lbl.classList.add('filtered');
+    showToast('📅 กรองวันที่ '+fmtDateLabel(val));
+  }
+  renderExp();
+  renderTodo();
+}
+
+
+// SWIPE TABS
+function goTab(i){
+  curTab=i;
+  document.getElementById('panelsInner').style.transform=`translateX(-${i*25}%)`;
+  document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  if(i===3)renderSum();
+}
+
+// SWIPE GESTURE
+let swX=0,swY=0,swStarted=false;
+const wrap=document.getElementById('panelsWrap');
+wrap.addEventListener('touchstart',e=>{swX=e.touches[0].clientX;swY=e.touches[0].clientY;swStarted=true},{passive:true});
+wrap.addEventListener('touchend',e=>{
+  if(!swStarted)return;swStarted=false;
+  const dx=e.changedTouches[0].clientX-swX;
+  const dy=Math.abs(e.changedTouches[0].clientY-swY);
+  if(Math.abs(dx)>50&&dy<80){
+    if(dx<0&&curTab<3)goTab(curTab+1);
+    else if(dx>0&&curTab>0)goTab(curTab-1);
+  }
+},{passive:true});
+
+function renderAll(){renderTodo();renderNotes();renderExp();renderSum()}
+
+// OVERLAY
+function closeOverlay(){document.getElementById('editOverlay').classList.remove('open')}
+
+// EDIT
 function openEditSheet(mode,id){
-  editMode=mode; editId=id;
-  const overlay=document.getElementById('editOverlay');
-  const body=document.getElementById('editBody');
-  const title=document.getElementById('editTitle');
-
+  editMode=mode;editId=id;
+  const body=document.getElementById('editBody'),title=document.getElementById('editTitle');
   if(mode==='todo'){
     const t=todos.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Task';
-    body.innerHTML=`
-      <input class="sheet-inp" id="ei_text" value="${esc(t.text)}" placeholder="Task...">
-      <div class="sheet-row">
-        <select class="sheet-sel" id="ei_tag">
-          <option value="work" ${t.tag==='work'?'selected':''}>🏢 Work</option>
-          <option value="client" ${t.tag==='client'?'selected':''}>🤝 Client</option>
-          <option value="personal" ${t.tag==='personal'?'selected':''}>👤 Personal</option>
-          <option value="other" ${t.tag==='other'?'selected':''}>📌 Other</option>
-        </select>
-        <select class="sheet-sel" id="ei_pri">
-          <option value="high" ${t.pri==='high'?'selected':''}>🔴 High</option>
-          <option value="med" ${t.pri==='med'?'selected':''}>🟡 Med</option>
-          <option value="low" ${t.pri==='low'?'selected':''}>🟢 Low</option>
-        </select>
-      </div>`;
-  } else if(mode==='note'){
-    const n=notes.find(x=>x.id===id);
-    title.textContent='✏️ แก้ไข Note';
-    body.innerHTML=`
-      <input class="sheet-inp" id="ei_ntitle" value="${esc(n.title)}" placeholder="หัวข้อ...">
-      <textarea class="sheet-textarea" id="ei_nbody" placeholder="เนื้อหา...">${esc(n.body)}</textarea>
-      <div class="sheet-row">
-        <select class="sheet-sel" id="ei_ntag">
-          <option value="work" ${n.tag==='work'?'selected':''}>🏢 Work</option>
-          <option value="client" ${n.tag==='client'?'selected':''}>🤝 Client</option>
-          <option value="personal" ${n.tag==='personal'?'selected':''}>👤 Personal</option>
-          <option value="idea" ${n.tag==='idea'?'selected':''}>💡 Idea</option>
-          <option value="other" ${n.tag==='other'?'selected':''}>📌 Other</option>
-        </select>
-      </div>`;
-  } else if(mode==='exp'){
+    body.innerHTML=`<input class="sheet-inp" id="ei_text" value="${esc(t.text)}" placeholder="Task...">
+    <div class="sheet-row">
+      <select class="sheet-sel" id="ei_tag"><option value="work" ${t.tag==='work'?'selected':''}>🏢 Work</option><option value="client" ${t.tag==='client'?'selected':''}>🤝 Client</option><option value="personal" ${t.tag==='personal'?'selected':''}>👤 Personal</option><option value="other" ${t.tag==='other'?'selected':''}>📌 Other</option></select>
+      <select class="sheet-sel" id="ei_pri"><option value="high" ${t.pri==='high'?'selected':''}>🔴 High</option><option value="med" ${t.pri==='med'?'selected':''}>🟡 Med</option><option value="low" ${t.pri==='low'?'selected':''}>🟢 Low</option></select>
+    </div>`;
+  }else if(mode==='note'||mode==='note_new'){
+    const n=mode==='note'?notes.find(x=>x.id===id):{title:'',body:'',tag:'work'};
+    title.textContent=mode==='note_new'?'📝 เพิ่ม Note ใหม่':'✏️ แก้ไข Note';
+    body.innerHTML=`<input class="sheet-inp" id="ei_ntitle" value="${esc(n.title)}" placeholder="หัวข้อ note...">
+    <textarea class="sheet-textarea" id="ei_nbody" placeholder="เขียน note ที่นี่...">${esc(n.body)}</textarea>
+    <div class="sheet-row"><select class="sheet-sel" id="ei_ntag"><option value="work" ${n.tag==='work'?'selected':''}>🏢 Work</option><option value="client" ${n.tag==='client'?'selected':''}>🤝 Client</option><option value="personal" ${n.tag==='personal'?'selected':''}>👤 Personal</option><option value="idea" ${n.tag==='idea'?'selected':''}>💡 Idea</option><option value="other" ${n.tag==='other'?'selected':''}>📌 Other</option></select></div>`;
+    setTimeout(()=>document.getElementById('ei_ntitle')?.focus(),200);
+  }else if(mode==='exp'){
     const e=exps.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Expense';
-    body.innerHTML=`
-      <input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}" placeholder="จำนวนเงิน">
-      <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px">
-        <option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option>
-        <option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option>
-        <option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option>
-        <option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option>
-        <option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option>
-        <option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option>
-        <option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option>
-      </select>
-      <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}" placeholder="Note...">`;
+    body.innerHTML=`<input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}" placeholder="จำนวนเงิน">
+    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
+    <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}" placeholder="Note...">
+    <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>`;
   }
-  overlay.classList.add('open');
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function openNoteSheet(id){
+  if(id!==null){openEditSheet('note',id)}else{editMode='note_new';editId=null;openEditSheet('note_new',null)}
 }
 
 async function saveEdit(){
   if(editMode==='todo'){
-    const t=todos.find(x=>x.id===editId);
-    if(!t)return;
+    const t=todos.find(x=>x.id===editId);if(!t)return;
     t.text=document.getElementById('ei_text').value.trim()||t.text;
-    t.tag=document.getElementById('ei_tag').value;
-    t.pri=document.getElementById('ei_pri').value;
-    closeOverlay('editOverlay');renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
-  } else if(editMode==='note'){
-    const n=notes.find(x=>x.id===editId);
-    if(!n)return;
-    n.title=document.getElementById('ei_ntitle').value.trim()||n.title;
-    n.body=document.getElementById('ei_nbody').value.trim();
-    n.tag=document.getElementById('ei_ntag').value;
-    closeOverlay('editOverlay');renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
-  } else if(editMode==='exp'){
-    const e=exps.find(x=>x.id===editId);
-    if(!e)return;
-    e.amount=parseFloat(document.getElementById('ei_eamt').value)||e.amount;
-    e.cat=document.getElementById('ei_ecat').value;
-    e.note=document.getElementById('ei_enote').value.trim()||e.note;
-    closeOverlay('editOverlay');renderExp();renderSum();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
-  }
-}
-
-// ── TODO ──
-async function addTodo(){
-  const v=document.getElementById('tInput').value.trim(); if(!v)return;
-  todos.unshift({id:Date.now(),text:v,tag:document.getElementById('tTag').value,pri:document.getElementById('tPri').value,done:false,ts:new Date().toISOString()});
-  document.getElementById('tInput').value='';renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
-}
-async function togTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;renderTodo();await pushTodos();}}
-async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();await pushTodos();showToast('🗑 ลบแล้ว');}
-function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo();}
-function renderTodo(){
-  let list=todos;
-  if(filt==='pending')list=todos.filter(t=>!t.done);
-  else if(filt==='done')list=todos.filter(t=>t.done);
-  else if(['work','client','personal','other'].includes(filt))list=todos.filter(t=>t.tag===filt);
-  const done=todos.filter(t=>t.done).length;
-  const pct=todos.length?Math.round(done/todos.length*100):0;
-  document.getElementById('progFill').style.width=pct+'%';
-  document.getElementById('progTxt').textContent=`${done} / ${todos.length} เสร็จ`;
-  const el=document.getElementById('todoList');
-  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">เพิ่ม task ด้านบน</span></div>`;return;}
-  el.innerHTML=list.map(t=>`
-    <div class="todo-item ${t.done?'done':''}">
-      <div class="chk ${t.done?'on':''}" onclick="togTodo(${t.id})">${t.done?'✓':''}</div>
-      <div class="t-body">
-        <div class="t-text">${esc(t.text)}</div>
-        <div class="badges"><span class="bdg bdg-${t.tag}">${TL[t.tag]}</span><span class="bdg bdg-${t.pri}">${PL[t.pri]}</span></div>
-        <div class="t-ts">🕐 ${fmtDt(t.ts)}</div>
-      </div>
-      <div class="item-actions">
-        <button class="edit-btn" onclick="openEditSheet('todo',${t.id})" title="แก้ไข">✏️</button>
-        <button class="del-btn" onclick="delTodo(${t.id})">×</button>
-      </div>
-    </div>`).join('');
-}
-
-// ── EXPENSE ──
-async function addExp(){
-  const a=parseFloat(document.getElementById('eAmt').value);if(!a||a<=0){document.getElementById('eAmt').focus();return;}
-  const cat=document.getElementById('eCat').value;
-  const note=document.getElementById('eNote').value.trim()||CL[cat].replace(/^\S+ /,'');
-  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString()});
-  document.getElementById('eAmt').value='';document.getElementById('eNote').value='';
-  renderExp();renderSum();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
-}
-async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderSum();await pushExps();showToast('🗑 ลบแล้ว');}
-function renderExpList(arr,el){
-  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>`;return;}
-  el.innerHTML=arr.map(e=>`
-    <div class="exp-item">
-      <div class="cat-dot" style="background:${CC[e.cat]}"></div>
-      <div class="e-body">
-        <div class="e-note">${esc(e.note)}</div>
-        <div class="e-meta">${CL[e.cat]} · ${fmtDt(e.date)}</div>
-      </div>
-      <div class="e-amt">฿${fmt(e.amount)}</div>
-      <div class="e-actions">
-        <button class="e-edit" onclick="openEditSheet('exp',${e.id})" title="แก้ไข">✏️</button>
-        <button class="e-del" onclick="delExp(${e.id})">×</button>
-      </div>
-    </div>`).join('');
-}
-function renderExp(){
-  const today=todayStr(),nowM=mStr(new Date());
-  renderExpList(exps.filter(e=>e.date.slice(0,10)===today),document.getElementById('expToday'));
-  renderExpList(exps.filter(e=>e.date.slice(0,7)===nowM),document.getElementById('expMonth'));
-}
-
-// ── NOTES ──
-function openNoteSheet(id){
-  // reuse edit sheet for add too
-  if(id!==null){openEditSheet('note',id);return;}
-  editMode='note_new'; editId=null;
-  const title=document.getElementById('editTitle');
-  const body=document.getElementById('editBody');
-  title.textContent='📝 เพิ่ม Note ใหม่';
-  body.innerHTML=`
-    <input class="sheet-inp" id="ei_ntitle" placeholder="หัวข้อ note...">
-    <textarea class="sheet-textarea" id="ei_nbody" placeholder="เขียน note ที่นี่..."></textarea>
-    <div class="sheet-row">
-      <select class="sheet-sel" id="ei_ntag">
-        <option value="work">🏢 Work</option><option value="client">🤝 Client</option>
-        <option value="personal">👤 Personal</option><option value="idea">💡 Idea</option>
-        <option value="other">📌 Other</option>
-      </select>
-    </div>`;
-  document.getElementById('editOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('ei_ntitle')?.focus(),200);
-}
-
-async function saveEdit(){
-  if(editMode==='note_new'){
+    t.tag=document.getElementById('ei_tag').value;t.pri=document.getElementById('ei_pri').value;
+    closeOverlay();renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='note_new'){
     const title=document.getElementById('ei_ntitle').value.trim();
     const body=document.getElementById('ei_nbody').value.trim();
     if(!title&&!body)return;
     notes.unshift({id:Date.now(),title:title||'(ไม่มีหัวข้อ)',body,tag:document.getElementById('ei_ntag').value,ts:new Date().toISOString()});
-    closeOverlay('editOverlay');renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
-  } else if(editMode==='todo'){
-    const t=todos.find(x=>x.id===editId);if(!t)return;
-    t.text=document.getElementById('ei_text').value.trim()||t.text;
-    t.tag=document.getElementById('ei_tag').value;
-    t.pri=document.getElementById('ei_pri').value;
-    closeOverlay('editOverlay');renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
-  } else if(editMode==='note'){
+    closeOverlay();renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='note'){
     const n=notes.find(x=>x.id===editId);if(!n)return;
     n.title=document.getElementById('ei_ntitle').value.trim()||n.title;
     n.body=document.getElementById('ei_nbody').value.trim();
     n.tag=document.getElementById('ei_ntag').value;
-    closeOverlay('editOverlay');renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
-  } else if(editMode==='exp'){
+    closeOverlay();renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='exp'){
     const e=exps.find(x=>x.id===editId);if(!e)return;
     e.amount=parseFloat(document.getElementById('ei_eamt').value)||e.amount;
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
-    closeOverlay('editOverlay');renderExp();renderSum();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+    e.pay=document.getElementById('ei_epay').value;
+    closeOverlay();renderExp();renderSum();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }
 }
 
-async function delNote(id){notes=notes.filter(x=>x.id!==id);renderNotes();await pushNotes();showToast('🗑 ลบแล้ว');}
-function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes();}
+// TODO
+async function addTodo(){
+  const v=document.getElementById('tInput').value.trim();if(!v)return;
+  todos.unshift({id:Date.now(),text:v,tag:document.getElementById('tTag').value,pri:document.getElementById('tPri').value,done:false,ts:new Date().toISOString()});
+  document.getElementById('tInput').value='';renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
+}
+async function togTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;renderTodo();await pushTodos()}}
+async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();await pushTodos();showToast('🗑 ลบแล้ว')}
+function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo()}
+function renderTodo(){
+  let list=todos;
+  if(filterDate) list=todos.filter(t=>t.ts&&t.ts.slice(0,10)===filterDate);
+  if(filt==='pending')list=list.filter(t=>!t.done);
+  else if(filt==='done')list=list.filter(t=>t.done);
+  else if(['work','client','personal','other'].includes(filt))list=list.filter(t=>t.tag===filt);
+  const done=todos.filter(t=>t.done).length;
+  const pct=todos.length?Math.round(done/todos.length*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=`${done}/${todos.length} เสร็จ`;
+  const el=document.getElementById('todoList');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">เพิ่มด้านบน</span></div>`;return}
+  el.innerHTML=list.map(t=>`<div class="todo-item pri-${t.pri} ${t.done?'done':''}">
+    <div class="chk ${t.done?'on':''}" onclick="togTodo(${t.id})">${t.done?'✓':''}</div>
+    <div class="t-body">
+      <div class="t-text">${esc(t.text)}</div>
+      <div class="badges"><span class="bdg bdg-${t.tag}">${TL[t.tag]}</span><span class="bdg bdg-${t.pri}">${PL[t.pri]}</span></div>
+      <div class="t-ts">🕐 ${fmtDt(t.ts)}</div>
+    </div>
+    <div class="item-actions">
+      <button class="edit-btn" onclick="openEditSheet('todo',${t.id})">✏️</button>
+      <button class="del-btn" onclick="delTodo(${t.id})">×</button>
+    </div>
+  </div>`).join('');
+}
+
+// EXPENSE
+async function addExp(){
+  const a=parseFloat(document.getElementById('eAmt').value);if(!a||a<=0){document.getElementById('eAmt').focus();return}
+  const cat=document.getElementById('eCat').value;
+  const note=document.getElementById('eNote').value.trim()||CL[cat].replace(/^\S+ /,'');
+  const pay=document.getElementById('ePay').value;
+  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay});
+  document.getElementById('eAmt').value='';document.getElementById('eNote').value='';
+  renderExp();renderSum();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+}
+async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderSum();await pushExps();showToast('🗑 ลบแล้ว')}
+function renderExpList(arr,el){
+  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>`;return}
+  el.innerHTML=arr.map(e=>`<div class="exp-item">
+    <div class="cat-dot" style="background:${CC[e.cat]}"></div>
+    <div class="e-body">
+      <div class="e-note">${esc(e.note)}</div>
+      <div class="e-meta">${CL[e.cat]} · <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> · ${fmtDt(e.date)}</div>
+    </div>
+    <div class="e-amt">฿${fmt(e.amount)}</div>
+    <div class="e-actions">
+      <button class="e-edit" onclick="openEditSheet('exp',${e.id})">✏️</button>
+      <button class="e-del" onclick="delExp(${e.id})">×</button>
+    </div>
+  </div>`).join('');
+}
+function renderExp(){
+  const activeDay=filterDate||todayStr();
+  const nowM=mStr(new Date());
+  const dayLabel=filterDate ? fmtDateLabel(filterDate) : 'วันนี้';
+  // update card labels
+  document.querySelector('#panel-expense .card:nth-child(2) .card-label').textContent=dayLabel;
+  renderExpList(exps.filter(e=>e.date.slice(0,10)===activeDay),document.getElementById('expToday'));
+  renderExpList(exps.filter(e=>e.date.slice(0,7)===nowM),document.getElementById('expMonth'));
+}
+
+// NOTES
+async function delNote(id){notes=notes.filter(x=>x.id!==id);renderNotes();await pushNotes();showToast('🗑 ลบแล้ว')}
+function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes()}
 function renderNotes(){
   const q=(document.getElementById('noteSearch').value||'').toLowerCase();
   let list=notes;
   if(nFilt!=='all')list=notes.filter(n=>n.tag===nFilt);
   if(q)list=list.filter(n=>n.title.toLowerCase().includes(q)||n.body.toLowerCase().includes(q));
   const el=document.getElementById('noteList');
-  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">📝</div>${q?'ไม่พบ note':'ยังไม่มี note'}<br><span style="font-size:12px">กดปุ่มด้านบนเพื่อเพิ่ม</span></div>`;return;}
-  el.innerHTML=list.map(n=>`
-    <div class="note-item">
-      <div class="note-header">
-        <div class="note-tag-dot" style="background:${NTC[n.tag]}"></div>
-        <div class="note-meta-wrap">
-          <div class="note-title-row">
-            <div class="note-title">${esc(n.title)}</div>
-            <div class="note-actions">
-              <button class="note-edit" onclick="openNoteSheet(${n.id})" title="แก้ไข">✏️</button>
-              <button class="note-del" onclick="delNote(${n.id})">×</button>
-            </div>
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">📝</div>${q?'ไม่พบ note':'ยังไม่มี note'}<br><span style="font-size:12px">กดปุ่มด้านบน</span></div>`;return}
+  el.innerHTML=list.map(n=>`<div class="note-item">
+    <div class="note-header">
+      <div class="note-tag-dot" style="background:${NTC[n.tag]}"></div>
+      <div class="note-meta-wrap">
+        <div class="note-title-row">
+          <div class="note-title">${esc(n.title)}</div>
+          <div class="note-actions">
+            <button class="note-edit" onclick="openNoteSheet(${n.id})">✏️</button>
+            <button class="note-del" onclick="delNote(${n.id})">×</button>
           </div>
-          <div class="note-ts">🕐 ${fmtDt(n.ts)} · <span class="bdg ${NTB[n.tag]}" style="font-size:10px;padding:1px 6px;">${NTL[n.tag]}</span></div>
         </div>
+        <div class="note-ts">🕐 ${fmtDt(n.ts)} · <span class="bdg ${NTB[n.tag]}" style="font-size:10px;padding:1px 6px">${NTL[n.tag]}</span></div>
       </div>
-      ${n.body?`<div class="note-preview">${esc(n.body)}</div>`:''}`
+    </div>
+    ${n.body?`<div class="note-preview">${esc(n.body)}</div>`:''}`
   ).join('');
 }
 
-// ── SUMMARY ──
-function chgM(d){sumM=new Date(sumM.getFullYear(),sumM.getMonth()+d,1);renderSum();}
+// SUMMARY
+function chgM(d){sumM=new Date(sumM.getFullYear(),sumM.getMonth()+d,1);renderSum()}
 function renderSum(){
   const ms=mStr(sumM);
   document.getElementById('mLabel').textContent=`${MONTHS[sumM.getMonth()]} ${sumM.getFullYear()+543}`;
@@ -578,27 +611,28 @@ function renderSum(){
   document.getElementById('sToday').textContent='฿'+fmt(tday);
   document.getElementById('sDone').textContent=todos.filter(t=>t.done).length;
   document.getElementById('sPend').textContent=todos.filter(t=>!t.done).length;
-  const ct={};mExp.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.amount;});
+  document.getElementById('sNotes').textContent=notes.length;
+  const ct={};mExp.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.amount});
   const cs=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
   const mx=cs[0]?cs[0][1]:1;
   document.getElementById('catBreak').innerHTML=cs.length
     ?cs.map(([c,a])=>`<div class="cat-row"><div class="cat-dot" style="background:${CC[c]}"></div><div class="cat-nm">${CL[c]}</div><div class="bar-wrap"><div class="bar-inner" style="width:${Math.round(a/mx*100)}%;background:${CC[c]}"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
-    :`<div class="empty">ยังไม่มีข้อมูล</div>`;
-  const dt={};mExp.forEach(e=>{const d=e.date.slice(8,10);dt[d]=(dt[d]||0)+e.amount;});
+    :'<div class="empty">ยังไม่มีข้อมูล</div>';
+  const dt={};mExp.forEach(e=>{const d=e.date.slice(8,10);dt[d]=(dt[d]||0)+e.amount});
   const ds=Object.entries(dt).sort((a,b)=>+a[0]-+b[0]);
   const dm=ds.length?Math.max(...ds.map(d=>d[1])):1;
   document.getElementById('dayBreak').innerHTML=ds.length
-    ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:#1A1A18"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
-    :`<div class="empty">ยังไม่มีข้อมูล</div>`;
+    ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:var(--blue)"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
+    :'<div class="empty">ยังไม่มีข้อมูล</div>';
 }
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay('editOverlay');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
 
 (async()=>{
   loadCache();renderAll();
   document.getElementById('loadingOverlay').classList.add('hide');
-  try{await syncAll(false);saveCache();showToast('✅ โหลดข้อมูลสำเร็จ');}
-  catch(e){setSyncStatus('error');showToast('⚠️ Offline mode');}
+  try{await syncAll(false);saveCache();showToast('✅ โหลดข้อมูลสำเร็จ')}
+  catch(e){setSyncStatus('error');showToast('⚠️ Offline mode')}
 })();
 </script>
 </body>

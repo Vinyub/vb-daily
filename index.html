@@ -255,8 +255,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <div class="hdr-top">
     <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses</div></div>
     <div class="hdr-right">
-      <div class="date-chip" id="dateLbl" onclick="openDatePicker()" title="กรองตามวันที่" style="cursor:pointer;user-select:none"></div>
-      <input type="date" id="datePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0" onchange="onDateChange(this.value)">
+      <label style="cursor:pointer;position:relative">
+        <div class="date-chip" id="dateLbl" style="user-select:none"></div>
+        <input type="date" id="datePicker" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;z-index:10" onchange="onDateChange(this.value)">
+      </label>
       <button class="sync-btn" onclick="syncAll()">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncTxt">Sync</span>
@@ -449,14 +451,13 @@ function fmtDateLabel(str){
 }
 document.getElementById('dateLbl').textContent=todayLabel();
 
-function openDatePicker(){
-  const picker=document.getElementById('datePicker');
-  // set max = today
-  picker.max=new Date().toISOString().slice(0,10);
-  if(filterDate) picker.value=filterDate;
-  else picker.value=new Date().toISOString().slice(0,10);
-  picker.showPicker ? picker.showPicker() : picker.click();
-}
+function openDatePicker(){} // handled by label
+
+// Set max on load
+document.addEventListener('DOMContentLoaded',()=>{
+  const p=document.getElementById('datePicker');
+  if(p) p.max=new Date().toISOString().slice(0,10);
+});
 
 function onDateChange(val){
   const today=new Date().toISOString().slice(0,10);

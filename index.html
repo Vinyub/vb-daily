@@ -115,12 +115,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 .e-actions{display:flex;gap:2px;flex-shrink:0}
 .e-edit{color:var(--gold);background:none;border:none;cursor:pointer;font-size:13px;padding:3px 4px}
 .e-del{color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px}
-/* receipt image */
-.e-img{width:100%;border-radius:8px;margin-top:8px;max-height:200px;object-fit:cover;border:1px solid var(--border);cursor:pointer}
+
 
 /* NOTES */
 .note-item{background:var(--surface);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
-.note-img{width:100%;border-radius:0 0 8px 8px;max-height:200px;object-fit:cover;border-top:1px solid var(--border);cursor:pointer}
+
 
 /* SUMMARY */
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -159,13 +158,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 .search-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,139,58,.1)}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 
-/* IMAGE UPLOAD */
-.img-upload-zone{border:2px dashed var(--border2);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;background:var(--surface2);transition:all .2s;margin-bottom:10px}
-.img-upload-zone:hover{border-color:var(--gold);background:var(--amber-soft)}
-.img-preview{width:100%;border-radius:var(--rs);max-height:180px;object-fit:cover;margin-bottom:10px;border:1px solid var(--border)}
-.img-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;cursor:pointer}
-.img-lightbox.open{display:flex}
-.img-lightbox img{max-width:92%;max-height:88vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+
 
 /* OVERLAY */
 .overlay{display:none;position:fixed;inset:0;background:rgba(26,18,8,.5);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
@@ -215,9 +208,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <div class="loading-txt">กำลังโหลดข้อมูล...</div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="img-lightbox" id="imgLightbox" onclick="this.classList.remove('open')">
-  <img id="lightboxImg" src="" alt="">
-</div>
 
 <!-- HEADER -->
 <div class="hdr">
@@ -329,12 +319,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
         <option value="the1">🌟 The 1</option>
       </select>
     </div>
-    <!-- Image upload for receipt -->
-    <div class="img-upload-zone" onclick="document.getElementById('expImgInput').click()">
-      <div id="expImgPreviewWrap" style="display:none"><img id="expImgPreview" class="img-preview" src="" alt=""></div>
-      <div id="expImgPlaceholder">📷 แนบสลิป / ใบเสร็จ (ไม่บังคับ)</div>
-    </div>
-    <input type="file" id="expImgInput" accept="image/*" style="display:none" onchange="onExpImgSelect(this)">
     <div id="expWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — กรุณาเติมเงินใน Wallet ก่อน แต่ยังบันทึกได้</div>
     <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
   </div>
@@ -408,7 +392,6 @@ let todos=[],exps=[],notes=[],wallets=[];
 let filt='all',nFilt='all',sumM=new Date(),isSyncing=false;
 let editMode=null,editId=null,curTab=0;
 let filterDate=null;
-let pendingExpImg=null; // base64 for new expense
 
 const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2D6A4F',shopping:'#C8851A',entertainment:'#D94F2A',other:'#9BA3B0'};
 const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};
@@ -433,7 +416,6 @@ function setSyncStatus(s){
   dot.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
   txt.textContent=s==='syncing'?'Sync...':s==='error'?'Error':'Synced';
 }
-function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('imgLightbox').classList.add('open')}
 
 // ── WALLET CALC ───────────────────────────────────────────
 function walletBalance(){
@@ -461,10 +443,10 @@ async function sheetRead(tab){const r=await fetch(`${API}?action=read&tab=${enco
 async function sheetWrite(tab,rows){await fetch(`${API}?action=write&tab=${encodeURIComponent(tab)}&data=${encodeURIComponent(JSON.stringify(rows))}`)}
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}
 function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:x[4]==='1',ts:String(x[5])}))}
-function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash',e.img||''])}
-function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash'),img:String(x[6]||'')}))}
-function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts,n.img||''])}
-function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4]),img:String(x[5]||'')}))}
+function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash'])}
+function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash')}))}
+function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts])}
+function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4])}))}
 function walletsToRows(a){return a.map(w=>[w.id,w.amount,w.note,w.ts])}
 function rowsToWallets(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],note:String(x[2]),ts:String(x[3])}))}
 
@@ -526,40 +508,7 @@ function updateStatStrip(){
 function closeOverlay(){document.getElementById('editOverlay').classList.remove('open')}
 
 // ── IMAGE UTILS ───────────────────────────────────────────
-function compressImg(file,maxW=400){
-  return new Promise(res=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
-        const canvas=document.createElement('canvas');
-        const ratio=Math.min(maxW/img.width,maxW/img.height,1);
-        canvas.width=img.width*ratio;canvas.height=img.height*ratio;
-        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-        // Try quality 0.5 first, if still too big drop to 0.3
-        let b64=canvas.toDataURL('image/jpeg',.5);
-        if(b64.length>35000){
-          // reduce further
-          const c2=document.createElement('canvas');
-          const r2=Math.min(300/img.width,300/img.height,ratio);
-          c2.width=img.width*r2;c2.height=img.height*r2;
-          c2.getContext('2d').drawImage(img,0,0,c2.width,c2.height);
-          b64=c2.toDataURL('image/jpeg',.4);
-        }
-        res(b64);
-      };
-      img.src=e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-async function onExpImgSelect(input){
-  if(!input.files[0])return;
-  pendingExpImg=await compressImg(input.files[0]);
-  document.getElementById('expImgPreview').src=pendingExpImg;
-  document.getElementById('expImgPreviewWrap').style.display='block';
-  document.getElementById('expImgPlaceholder').textContent='เปลี่ยนรูป';
-}
+
 
 // ── TODO ──────────────────────────────────────────────────
 async function addTodo(){
@@ -618,13 +567,9 @@ async function addExp(){
     if(bal-a<0){document.getElementById('expWarnBar').style.display='flex'}
     else{document.getElementById('expWarnBar').style.display='none'}
   }
-  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay,img:pendingExpImg||''});
+  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay});
   document.getElementById('eAmt').value='';document.getElementById('eNote').value='';
-  // reset img
-  pendingExpImg=null;
-  document.getElementById('expImgPreviewWrap').style.display='none';
-  document.getElementById('expImgPlaceholder').textContent='📷 แนบสลิป / ใบเสร็จ (ไม่บังคับ)';
-  document.getElementById('expImgInput').value='';
+
   renderExp();renderWallet();renderSum();updateStatStrip();
   showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
 }
@@ -632,8 +577,7 @@ async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWalle
 function renderExpList(arr,el){
   if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>`;return}
   el.innerHTML=arr.map(e=>`
-  <div class="exp-item" style="flex-direction:column;align-items:stretch;padding:0;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:11px;padding:12px 13px">
+  <div class="exp-item">
       <div class="cat-dot" style="background:${CC[e.cat]}"></div>
       <div class="e-body">
         <div class="e-note">${esc(e.note)}</div>
@@ -643,9 +587,7 @@ function renderExpList(arr,el){
       <div class="e-actions">
         <button class="e-edit" onclick="openEditSheet('exp',${e.id})">✏️</button>
         <button class="e-del" onclick="delExp(${e.id})">×</button>
-      </div>
-    </div>
-    ${e.img?`<img class="e-img" src="${e.img}" onclick="openLightbox('${e.img}')" style="margin:0 13px 12px;width:calc(100% - 26px);border-radius:8px;max-height:180px;object-fit:cover;border:1px solid var(--border);cursor:pointer">`:''}`
+    </div>`
   ).join('');
 }
 function renderExp(){
@@ -653,9 +595,7 @@ function renderExp(){
   document.getElementById('expTodayLabel').textContent=filterDate?fmtDateLabel(filterDate):'วันนี้';
   renderExpList(exps.filter(e=>e.date.slice(0,10)===activeDay),document.getElementById('expToday'));
   renderExpList(exps.filter(e=>e.date.slice(0,7)===mStr(new Date())),document.getElementById('expMonth'));
-  // Show wallet warning if cash selected
-  const pay=document.getElementById('ePay')?.value;
-  if(pay==='cash'&&walletBalance()<0)document.getElementById('expWarnBar').style.display='flex';
+
 }
 
 // ── WALLET ────────────────────────────────────────────────
@@ -705,11 +645,7 @@ function openNoteSheet(id){
       <option value="personal">👤 Personal</option><option value="idea">💡 Idea</option>
       <option value="other">📌 Other</option>
     </select></div>
-    <div class="img-upload-zone" onclick="document.getElementById('noteImgInput').click()" id="noteImgZone">
-      <div id="noteImgPreviewWrap" style="display:none"><img id="noteImgPreview" class="img-preview" src="" alt=""></div>
-      <div id="noteImgPlaceholder">🖼️ แนบรูปภาพ (ไม่บังคับ)</div>
-    </div>
-    <input type="file" id="noteImgInput" accept="image/*" style="display:none" onchange="onNoteImgSelect(this)">`;
+`;
     document.getElementById('editOverlay').classList.add('open');
     setTimeout(()=>document.getElementById('ei_ntitle')?.focus(),200);
   }
@@ -750,8 +686,7 @@ function renderNotes(){
     <div style="padding:11px 13px">
       <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:${n.body?'6px':'0'}">${esc(n.title)}</div>
       ${n.body?`<div style="font-size:13px;color:var(--secondary);line-height:1.6;white-space:pre-wrap;word-break:break-word">${esc(n.body)}</div>`:''}
-    </div>
-    ${n.img?`<img class="note-img" src="${n.img}" onclick="openLightbox('${n.img}')">`:''}`
+    </div>`
   ).join('');
 }
 
@@ -773,33 +708,19 @@ function openEditSheet(mode,id){
     body.innerHTML=`<input class="sheet-inp" id="ei_ntitle" value="${esc(n.title)}">
     <textarea class="sheet-textarea" id="ei_nbody">${esc(n.body)}</textarea>
     <div class="sheet-row"><select class="sheet-sel" id="ei_ntag"><option value="work" ${n.tag==='work'?'selected':''}>🏢 Work</option><option value="client" ${n.tag==='client'?'selected':''}>🤝 Client</option><option value="personal" ${n.tag==='personal'?'selected':''}>👤 Personal</option><option value="idea" ${n.tag==='idea'?'selected':''}>💡 Idea</option><option value="other" ${n.tag==='other'?'selected':''}>📌 Other</option></select></div>
-    ${n.img?`<img src="${n.img}" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:150px;object-fit:cover;cursor:pointer" onclick="openLightbox('${n.img}')">`:'' }
-    <div class="img-upload-zone" onclick="document.getElementById('noteImgEditInput').click()">
-      <div id="noteImgEditPreviewWrap" style="display:none"><img id="noteImgEditPreview" class="img-preview" src="" alt=""></div>
-      <div id="noteImgEditPlaceholder">🖼️ ${n.img?'เปลี่ยนรูป':'เพิ่มรูป'}</div>
-    </div>
-    <input type="file" id="noteImgEditInput" accept="image/*" style="display:none" onchange="onNoteImgEditSelect(this)">`;
-    pendingNoteImg=n.img||null;
-  }else if(mode==='exp'){
+`;
+      }else if(mode==='exp'){
     const e=exps.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Expense';
     body.innerHTML=`<input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}">
     <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
     <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}">
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>
-    ${e.img?`<img src="${e.img}" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:150px;object-fit:cover;cursor:pointer" onclick="openLightbox('${e.img}')">`:'' }
-    <div class="img-upload-zone" onclick="document.getElementById('expImgEditInput').click()">
-      <div id="expImgEditPreviewWrap" style="display:none"><img id="expImgEditPreview" class="img-preview" src="" alt=""></div>
-      <div id="expImgEditPlaceholder">📷 ${e.img?'เปลี่ยนรูป':'เพิ่มสลิป'}</div>
-    </div>
-    <input type="file" id="expImgEditInput" accept="image/*" style="display:none" onchange="onExpImgEditSelect(this)">`;
+`;
     pendingExpImg=e.img||null;
   }
   document.getElementById('editOverlay').classList.add('open');
 }
-let pendingExpEditImg=null,pendingNoteEditImg=null;
-async function onExpImgEditSelect(input){if(!input.files[0])return;pendingExpEditImg=await compressImg(input.files[0]);document.getElementById('expImgEditPreview').src=pendingExpEditImg;document.getElementById('expImgEditPreviewWrap').style.display='block';document.getElementById('expImgEditPlaceholder').textContent='เปลี่ยนรูป'}
-async function onNoteImgEditSelect(input){if(!input.files[0])return;pendingNoteEditImg=await compressImg(input.files[0]);document.getElementById('noteImgEditPreview').src=pendingNoteEditImg;document.getElementById('noteImgEditPreviewWrap').style.display='block';document.getElementById('noteImgEditPlaceholder').textContent='เปลี่ยนรูป'}
 
 async function saveEdit(){
   if(editMode==='todo'){
@@ -811,23 +732,20 @@ async function saveEdit(){
     const title=document.getElementById('ei_ntitle').value.trim();
     const body2=document.getElementById('ei_nbody').value.trim();
     if(!title&&!body2)return;
-    notes.unshift({id:Date.now(),title:title||'(ไม่มีหัวข้อ)',body:body2,tag:document.getElementById('ei_ntag').value,ts:new Date().toISOString(),img:pendingNoteImg||''});
-    pendingNoteImg=null;closeOverlay();renderNotes();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
+    notes.unshift({id:Date.now(),title:title||'(ไม่มีหัวข้อ)',body:body2,tag:document.getElementById('ei_ntag').value,ts:new Date().toISOString()});closeOverlay();renderNotes();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='note'){
     const n=notes.find(x=>x.id===editId);if(!n)return;
     n.title=document.getElementById('ei_ntitle').value.trim()||n.title;
     n.body=document.getElementById('ei_nbody').value.trim();
     n.tag=document.getElementById('ei_ntag').value;
-    if(pendingNoteEditImg)n.img=pendingNoteEditImg;
-    pendingNoteEditImg=null;closeOverlay();renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
+closeOverlay();renderNotes();showToast('💾 กำลังบันทึก...',1500);await pushNotes();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='exp'){
     const e=exps.find(x=>x.id===editId);if(!e)return;
     e.amount=parseFloat(document.getElementById('ei_eamt').value)||e.amount;
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
     e.pay=document.getElementById('ei_epay').value;
-    if(pendingExpEditImg)e.img=pendingExpEditImg;
-    pendingExpEditImg=null;closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }
 }
 

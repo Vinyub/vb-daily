@@ -575,21 +575,23 @@ async function addExp(){
 }
 async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
 function renderExpList(arr,el){
-  if(!arr.length){el.innerHTML=`<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>`;return}
-  el.innerHTML=arr.map(e=>`
-  <div class="exp-item">
-    <div class="cat-dot" style="background:${CC[e.cat]}"></div>
-    <div class="e-body">
-      <div class="e-note">${esc(e.note)}</div>
-      <div class="e-meta">${CL[e.cat]} · <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> · ${fmtDt(e.date)}</div>
-    </div>
-    <div class="e-amt">฿${fmt(e.amount)}</div>
-    <div class="e-actions">
-      <button class="e-edit" onclick="openEditSheet('exp',${e.id})">✏️</button>
-      <button class="e-del" onclick="delExp(${e.id})">×</button>
-    </div>
-  </div>`
-  ).join('');
+  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>';return}
+  let out='';
+  for(const e of arr){
+    out+=`<div class="exp-item">`;
+    out+=`<div class="cat-dot" style="background:${CC[e.cat]}"></div>`;
+    out+=`<div class="e-body">`;
+    out+=`<div class="e-note">${esc(e.note)}</div>`;
+    out+=`<div class="e-meta">${CL[e.cat]} &middot; <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> &middot; ${fmtDt(e.date)}</div>`;
+    out+=`</div>`;
+    out+=`<div class="e-amt">฿${fmt(e.amount)}</div>`;
+    out+=`<div class="e-actions">`;
+    out+=`<button class="e-edit" onclick="openEditSheet('exp',${e.id})">✏️</button>`;
+    out+=`<button class="e-del" onclick="delExp(${e.id})">×</button>`;
+    out+=`</div>`;
+    out+=`</div>`;
+  }
+  el.innerHTML=out;
 }
 function renderExp(){
   const activeDay=filterDate||todayStr();

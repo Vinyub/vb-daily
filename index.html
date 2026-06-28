@@ -526,7 +526,7 @@ function updateStatStrip(){
 function closeOverlay(){document.getElementById('editOverlay').classList.remove('open')}
 
 // ── IMAGE UTILS ───────────────────────────────────────────
-function compressImg(file,maxW=800){
+function compressImg(file,maxW=400){
   return new Promise(res=>{
     const reader=new FileReader();
     reader.onload=e=>{
@@ -536,7 +536,17 @@ function compressImg(file,maxW=800){
         const ratio=Math.min(maxW/img.width,maxW/img.height,1);
         canvas.width=img.width*ratio;canvas.height=img.height*ratio;
         canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-        res(canvas.toDataURL('image/jpeg',.7));
+        // Try quality 0.5 first, if still too big drop to 0.3
+        let b64=canvas.toDataURL('image/jpeg',.5);
+        if(b64.length>35000){
+          // reduce further
+          const c2=document.createElement('canvas');
+          const r2=Math.min(300/img.width,300/img.height,ratio);
+          c2.width=img.width*r2;c2.height=img.height*r2;
+          c2.getContext('2d').drawImage(img,0,0,c2.width,c2.height);
+          b64=c2.toDataURL('image/jpeg',.4);
+        }
+        res(b64);
       };
       img.src=e.target.result;
     };

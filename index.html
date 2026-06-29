@@ -702,7 +702,8 @@ function toggleNote(id){
 function renderNotes(){
   const q=(document.getElementById('noteSearch').value||'').toLowerCase();
   let list=notes;
-  if(nFilt!=='all')list=notes.filter(n=>n.tag===nFilt);
+  list=[...list].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  if(nFilt!=='all')list=list.filter(n=>n.tag===nFilt);
   if(q)list=list.filter(n=>n.title.toLowerCase().includes(q)||n.body.toLowerCase().includes(q));
   const el=document.getElementById('noteList');
   if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">📝</div>${q?'ไม่พบ':'ยังไม่มี note'}<br><span style="font-size:12px">กดปุ่มด้านบน</span></div>`;return}

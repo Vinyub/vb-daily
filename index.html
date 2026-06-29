@@ -453,6 +453,14 @@ function rowsToWallets(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1
 async function syncAll(showMsg=true){
   if(isSyncing)return;isSyncing=true;setSyncStatus('syncing');
   try{
+    // Push local data first, then pull from Sheets
+    await Promise.all([
+      sheetWrite('todos',todosToRows(todos)),
+      sheetWrite('expenses',expsToRows(exps)),
+      sheetWrite('notes',notesToRows(notes)),
+      sheetWrite('wallets',walletsToRows(wallets))
+    ]);
+    // Then pull back to confirm
     const[tR,eR,nR,wR]=await Promise.all([sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')]);
     todos=rowsToTodos(tR);exps=rowsToExps(eR);notes=rowsToNotes(nR);wallets=rowsToWallets(wR);
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();

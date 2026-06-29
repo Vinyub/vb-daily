@@ -677,6 +677,22 @@ async function onNoteImgSelect(input){
 }
 async function delNote(id){notes=notes.filter(x=>x.id!==id);renderNotes();updateStatStrip();await pushNotes();showToast('🗑 ลบแล้ว')}
 function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes()}
+// Track expanded notes
+const expandedNotes=new Set();
+function toggleNote(id){
+  const body=document.getElementById('nbody-'+id);
+  const chev=document.getElementById('chev-'+id);
+  if(!body)return;
+  if(expandedNotes.has(id)){
+    expandedNotes.delete(id);
+    body.style.maxHeight='0';
+    chev.style.transform='rotate(0deg)';
+  } else {
+    expandedNotes.add(id);
+    body.style.maxHeight=body.scrollHeight+'px';
+    chev.style.transform='rotate(180deg)';
+  }
+}
 function renderNotes(){
   const q=(document.getElementById('noteSearch').value||'').toLowerCase();
   let list=notes;

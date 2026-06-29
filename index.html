@@ -450,19 +450,25 @@ function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(
 function walletsToRows(a){return a.map(w=>[w.id,w.amount,w.note,w.ts])}
 function rowsToWallets(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],note:String(x[2]),ts:String(x[3])}))}
 
+// Merge: keep items that exist in local but not in remote (by id)
+function mergeData(local, remote){
+  const remoteIds=new Set(remote.map(x=>x.id));
+  const localOnly=local.filter(x=>!remoteIds.has(x.id));
+  return [...remote, ...localOnly];
+}
+
 async function syncAll(showMsg=true){
   if(isSyncing)return;isSyncing=true;setSyncStatus('syncing');
   try{
-    // Push local data first, then pull from Sheets
-    await Promise.all([
-      sheetWrite('todos',todosToRows(todos)),
-      sheetWrite('expenses',expsToRows(exps)),
-      sheetWrite('notes',notesToRows(notes)),
-      sheetWrite('wallets',walletsToRows(wallets))
+    // Pull from Sheets
+    const[tR,eR,nR,wR]=await Promise.all([
+      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
     ]);
-    // Then pull back to confirm
-    const[tR,eR,nR,wR]=await Promise.all([sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')]);
-    todos=rowsToTodos(tR);exps=rowsToExps(eR);notes=rowsToNotes(nR);wallets=rowsToWallets(wR);
+    // Merge: keep local items not yet in Sheets
+    todos=mergeData(todos,rowsToTodos(tR));
+    exps=mergeData(exps,rowsToExps(eR));
+    notes=mergeData(notes,rowsToNotes(nR));
+    wallets=mergeData(wallets,rowsToWallets(wR));
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
   }catch(e){setSyncStatus('error');showToast('❌ Sync ไม่สำเร็จ')}
   isSyncing=false;

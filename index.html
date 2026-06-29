@@ -386,7 +386,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 </div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbyReL-osgWZSPjWgSEb9ZogvM0z_709ayqBQE4zxHn6tayk52iPNvGBeAHPlIAUPQAx/exec';
+const API='https://script.google.com/macros/s/AKfycbycHsSJmu9WrZ6GuxQub0AErrejc64Okuzc9Zj7BAPHO4NJCJdrzrwg_hp9aBWJ-qFz/exec';
 const TK='vb_todos_v5',EK='vb_exp_v5',NK='vb_notes_v5',WK='vb_wallet_v1';
 let todos=[],exps=[],notes=[],wallets=[];
 let filt='all',nFilt='all',sumM=new Date(),isSyncing=false;
@@ -440,7 +440,13 @@ function saveCache(){
 
 // ── SHEETS ────────────────────────────────────────────────
 async function sheetRead(tab){const r=await fetch(`${API}?action=read&tab=${encodeURIComponent(tab)}`);const j=await r.json();return j.data||[]}
-async function sheetWrite(tab,rows){await fetch(`${API}?action=write&tab=${encodeURIComponent(tab)}&data=${encodeURIComponent(JSON.stringify(rows))}`)}
+async function sheetWrite(tab,rows){
+  await fetch(API,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'write',tab,data:JSON.stringify(rows)})
+  });
+}
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}
 function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:x[4]==='1',ts:String(x[5])}))}
 function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash'])}

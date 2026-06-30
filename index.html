@@ -441,10 +441,13 @@ function saveCache(){
 // ── SHEETS ────────────────────────────────────────────────
 async function sheetRead(tab){const r=await fetch(`${API}?action=read&tab=${encodeURIComponent(tab)}`);const j=await r.json();return j.data||[]}
 async function sheetWrite(tab,rows){
+  const body=new URLSearchParams();
+  body.append('action','write');
+  body.append('tab',tab);
+  body.append('data',JSON.stringify(rows));
   await fetch(API,{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'write',tab,data:JSON.stringify(rows)})
+    body:body
   });
 }
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}

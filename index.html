@@ -49,9 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 #walletStrip{background:linear-gradient(135deg,#FDF5E6,#FAF0D8);border-bottom:2px solid rgba(212,139,58,.2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
 
 /* SWIPE */
-.panels-wrap{overflow:hidden;width:100%;touch-action:pan-y}
+.panels-wrap{overflow:hidden;width:100%;touch-action:pan-y;position:relative}
 .panels-inner{display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);width:500%}
-.panel{width:20%;flex-shrink:0;padding:16px 16px 80px;min-height:calc(100vh - 160px)}
+.panel{width:20%;flex-shrink:0;padding:16px 16px 100px}
 
 /* CARD */
 .card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -324,13 +324,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   </div>
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
   <div class="card" style="padding:12px 14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
-      <div class="card-label" style="margin-bottom:0">รายการเดือน</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="chgExpMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">‹</button>
-        <div style="font-size:13px;font-weight:600;color:var(--walnut);min-width:80px;text-align:center" id="expMonthLabel"></div>
-        <button onclick="chgExpMonth(1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">›</button>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:11px">
+      <button onclick="chgExpMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:18px;font-weight:600">‹</button>
+      <div style="font-size:14px;font-weight:700;color:var(--walnut);min-width:110px;text-align:center;white-space:nowrap" id="expMonthLabel"></div>
+      <button onclick="chgExpMonth(1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:18px;font-weight:600">›</button>
     </div>
     <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px" id="expMonthTotal"></div>
     <div id="expMonth"></div>

@@ -625,6 +625,36 @@ async function addExp(){
   showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
 }
 async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
+let expPeriodMode=0;
+let expViewMonth=new Date();
+
+function setPeriodMode(m){
+  expPeriodMode=m;
+  for(let i=0;i<3;i++){
+    const btn=document.getElementById('periodBtn'+i);
+    if(!btn)return;
+    if(i===m){btn.style.background='var(--grad-gold)';btn.style.color='#fff';btn.style.borderColor='transparent';}
+    else{btn.style.background='var(--surface2)';btn.style.color='var(--secondary)';btn.style.borderColor='var(--border)';}
+  }
+  const mn=document.getElementById('periodMonthNav');
+  const mc=document.getElementById('periodCustomNav');
+  if(mn)mn.style.display=m===1?'flex':'none';
+  if(mc)mc.style.display=m===2?'flex':'none';
+  if(m===2){
+    const today=todayStr();
+    const fromEl=document.getElementById('periodFrom');
+    const toEl=document.getElementById('periodTo');
+    if(fromEl&&!fromEl.value)fromEl.value=mStr(new Date()).slice(0,7)+'-01';
+    if(toEl&&!toEl.value)toEl.value=today;
+  }
+  renderExp();
+}
+
+function chgExpMonth(d){
+  expViewMonth=new Date(expViewMonth.getFullYear(),expViewMonth.getMonth()+d,1);
+  renderExp();
+}
+
 function renderExpList(arr,el){
   if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>';return}
   let out='';
@@ -648,6 +678,24 @@ function renderExp(){
   const activeDay=filterDate||todayStr();
   document.getElementById('expTodayLabel').textContent=filterDate?fmtDateLabel(filterDate):'วันนี้';
   renderExpList(exps.filter(e=>e.date.slice(0,10)===activeDay),document.getElementById('expToday'));
+  // Period section
+  let periodExps=[];
+  if(expPeriodMode===0){
+    periodExps=exps.filter(e=>e.date.slice(0,10)===todayStr());
+  } else if(expPeriodMode===1){
+    const ms=mStr(expViewMonth);
+    periodExps=exps.filter(e=>e.date.slice(0,7)===ms);
+    const lbl=document.getElementById('expMonthLabel');
+    if(lbl)lbl.textContent=MONTHS[expViewMonth.getMonth()].slice(0,3)+'. '+(expViewMonth.getFullYear()+543);
+  } else {
+    const from=document.getElementById('periodFrom')?.value;
+    const to=document.getElementById('periodTo')?.value;
+    if(from&&to)periodExps=exps.filter(e=>{const d=e.date.slice(0,10);return d>=from&&d<=to;});
+  }
+  const total=periodExps.reduce((s,e)=>s+e.amount,0);
+  const totalEl=document.getElementById('expPeriodTotal');
+  if(totalEl)totalEl.textContent=periodExps.length?'รวม ฿'+fmt(total)+' ('+periodExps.length+' รายการ)':'ยังไม่มีรายการ';
+  renderExpList(periodExps,document.getElementById('expMonth'));
   renderExpList(exps.filter(e=>e.date.slice(0,7)===mStr(new Date())),document.getElementById('expMonth'));
 
 }

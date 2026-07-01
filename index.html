@@ -433,8 +433,10 @@ const DAYS=['อาทิตย์','จันทร์','อังคาร','�
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function fmt(n){return Number(n).toLocaleString('th-TH',{maximumFractionDigits:0})}
 function fmtDt(iso){const d=new Date(iso);return `${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`}
-function todayStr(){return new Date().toISOString().slice(0,10)}
-function mStr(d){return d.toISOString().slice(0,7)}
+function localDateStr(iso){const d=new Date(iso);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function localMonthStr(iso){const d=new Date(iso);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function mStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 function showToast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
 function setSyncStatus(s){
   const dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt');
@@ -572,7 +574,7 @@ async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();updateS
 function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo()}
 function renderTodo(){
   let list=todos;
-  if(filterDate)list=list.filter(t=>t.ts&&t.ts.slice(0,10)===filterDate);
+  if(filterDate)list=list.filter(t=>t.ts&&localDateStr(t.ts)===filterDate);
   if(filt==='pending')list=list.filter(t=>!t.done);
   else if(filt==='done')list=list.filter(t=>t.done);
   else if(['work','client','personal','other'].includes(filt))list=list.filter(t=>t.tag===filt);
@@ -676,26 +678,26 @@ function renderExpList(arr,el){
 function renderExp(){
   const activeDay=filterDate||todayStr();
   document.getElementById('expTodayLabel').textContent=filterDate?fmtDateLabel(filterDate):'วันนี้';
-  renderExpList(exps.filter(e=>e.date.slice(0,10)===activeDay),document.getElementById('expToday'));
+  renderExpList(exps.filter(e=>localDateStr(e.date)===activeDay),document.getElementById('expToday'));
   // Period section
   let periodExps=[];
   if(expPeriodMode===0){
-    periodExps=exps.filter(e=>e.date.slice(0,10)===todayStr());
+    periodExps=exps.filter(e=>localDateStr(e.date)===todayStr());
   } else if(expPeriodMode===1){
     const ms=mStr(expViewMonth);
-    periodExps=exps.filter(e=>e.date.slice(0,7)===ms);
+    periodExps=exps.filter(e=>localMonthStr(e.date)===ms);
     const lbl=document.getElementById('expMonthLabel');
     if(lbl)lbl.textContent=MONTHS[expViewMonth.getMonth()].slice(0,3)+'. '+(expViewMonth.getFullYear()+543);
   } else {
     const from=document.getElementById('periodFrom')?.value;
     const to=document.getElementById('periodTo')?.value;
-    if(from&&to)periodExps=exps.filter(e=>{const d=e.date.slice(0,10);return d>=from&&d<=to;});
+    if(from&&to)periodExps=exps.filter(e=>{const d=localDateStr(e.date);return d>=from&&d<=to;});
   }
   const total=periodExps.reduce((s,e)=>s+e.amount,0);
   const totalEl=document.getElementById('expPeriodTotal');
   if(totalEl)totalEl.textContent=periodExps.length?'รวม ฿'+fmt(total)+' ('+periodExps.length+' รายการ)':'ยังไม่มีรายการ';
   renderExpList(periodExps,document.getElementById('expMonth'));
-  renderExpList(exps.filter(e=>e.date.slice(0,7)===mStr(new Date())),document.getElementById('expMonth'));
+  renderExpList(exps.filter(e=>localMonthStr(e.date)===mStr(new Date())),document.getElementById('expMonth'));
 
 }
 
@@ -872,9 +874,9 @@ function chgM(d){sumM=new Date(sumM.getFullYear(),sumM.getMonth()+d,1);renderSum
 function renderSum(){
   const ms=mStr(sumM);
   document.getElementById('mLabel').textContent=`${MONTHS[sumM.getMonth()]} ${sumM.getFullYear()+543}`;
-  const mExp=exps.filter(e=>e.date.slice(0,7)===ms);
+  const mExp=exps.filter(e=>localMonthStr(e.date)===ms);
   const total=mExp.reduce((s,e)=>s+e.amount,0);
-  const tday=exps.filter(e=>e.date.slice(0,10)===todayStr()).reduce((s,e)=>s+e.amount,0);
+  const tday=exps.filter(e=>localDateStr(e.date)===todayStr()).reduce((s,e)=>s+e.amount,0);
   const bal=walletBalance();
   document.getElementById('sTotal').textContent='฿'+fmt(total);
   document.getElementById('sToday').textContent='฿'+fmt(tday);

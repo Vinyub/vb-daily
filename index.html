@@ -323,13 +323,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
   </div>
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
-  <div class="card" style="padding:12px 14px">
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:11px">
-      <button onclick="chgExpMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:18px;font-weight:600">‹</button>
-      <div style="font-size:14px;font-weight:700;color:var(--walnut);min-width:110px;text-align:center;white-space:nowrap" id="expMonthLabel"></div>
-      <button onclick="chgExpMonth(1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:18px;font-weight:600">›</button>
+  <div class="card" style="padding:14px">
+    <!-- Period mode selector -->
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button id="periodBtn0" onclick="setPeriodMode(0)" style="flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--grad-gold);color:#fff;font-size:12px;font-weight:700;cursor:pointer">วันนี้</button>
+      <button id="periodBtn1" onclick="setPeriodMode(1)" style="flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);color:var(--secondary);font-size:12px;font-weight:600;cursor:pointer">ทั้งเดือน</button>
+      <button id="periodBtn2" onclick="setPeriodMode(2)" style="flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);color:var(--secondary);font-size:12px;font-weight:600;cursor:pointer">กำหนดเอง</button>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px" id="expMonthTotal"></div>
+    <!-- Mode 0: Today (no extra UI) -->
+    <!-- Mode 1: Month navigator -->
+    <div id="periodMonthNav" style="display:none;align-items:center;justify-content:center;gap:10px;margin-bottom:10px">
+      <button onclick="chgExpMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:18px">‹</button>
+      <div style="font-size:14px;font-weight:700;color:var(--walnut);min-width:110px;text-align:center" id="expMonthLabel">-</div>
+      <button onclick="chgExpMonth(1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:18px">›</button>
+    </div>
+    <!-- Mode 2: Custom range -->
+    <div id="periodCustomNav" style="display:none;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:12px;color:var(--muted);white-space:nowrap">จาก</span>
+        <input type="date" id="periodFrom" style="flex:1;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text);outline:none" onchange="renderExp()">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:12px;color:var(--muted);white-space:nowrap">ถึง</span>
+        <input type="date" id="periodTo" style="flex:1;padding:7px 10px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text);outline:none" onchange="renderExp()">
+      </div>
+    </div>
+    <!-- Total -->
+    <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px" id="expPeriodTotal"></div>
     <div id="expMonth"></div>
   </div>
 </div>

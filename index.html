@@ -49,9 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 #walletStrip{background:linear-gradient(135deg,#FDF5E6,#FAF0D8);border-bottom:2px solid rgba(212,139,58,.2);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
 
 /* SWIPE */
-.panels-wrap{overflow:hidden;width:100%;touch-action:pan-y;position:relative}
-.panels-inner{display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);width:500%}
-.panel{width:20%;flex-shrink:0;padding:16px 16px 100px}
+.panels-wrap{overflow:hidden;width:100%;}
+.panels-inner{display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);width:500%;align-items:flex-start}
+.panel{width:20%;flex-shrink:0;padding:16px 16px 100px;box-sizing:border-box}
 
 /* CARD */
 .card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -538,7 +538,7 @@ function goTab(i){
   if(i===3)renderWallet();
 }
 let swX=0,swY=0,swStarted=false;
-const wrap=document.getElementById('panelsWrap');
+const wrap=document.getElementById('panelsInner');
 wrap.addEventListener('touchstart',e=>{swX=e.touches[0].clientX;swY=e.touches[0].clientY;swStarted=true},{passive:true});
 wrap.addEventListener('touchend',e=>{
   if(!swStarted)return;swStarted=false;

@@ -823,10 +823,22 @@ function renderSum(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
 
 (async()=>{
-  loadCache();renderAll();
+  // Show loading overlay while fetching from Sheets
+  try{
+    const[tR,eR,nR,wR]=await Promise.all([
+      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
+    ]);
+    todos=rowsToTodos(tR);
+    exps=rowsToExps(eR);
+    notes=rowsToNotes(nR);
+    wallets=rowsToWallets(wR);
+    saveCache();setSyncStatus('ok');showToast('✅ โหลดข้อมูลสำเร็จ');
+  }catch(e){
+    // Fallback to cache if Sheets fails
+    loadCache();setSyncStatus('error');showToast('⚠️ Offline — ใช้ข้อมูล local');
+  }
+  renderAll();
   document.getElementById('loadingOverlay').classList.add('hide');
-  try{await syncAll(false);saveCache();showToast('✅ โหลดข้อมูลสำเร็จ')}
-  catch(e){setSyncStatus('error');showToast('⚠️ Offline mode')}
 })();
 </script>
 </body>

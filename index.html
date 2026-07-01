@@ -323,7 +323,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
   </div>
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
-  <div class="card" style="padding:12px 14px"><div class="card-label">เดือนนี้ทั้งหมด</div><div id="expMonth"></div></div>
+  <div class="card" style="padding:12px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+      <div class="card-label" style="margin-bottom:0">รายการเดือน</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="chgExpMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">‹</button>
+        <div style="font-size:13px;font-weight:600;color:var(--walnut);min-width:80px;text-align:center" id="expMonthLabel"></div>
+        <button onclick="chgExpMonth(1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:16px">›</button>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px" id="expMonthTotal"></div>
+    <div id="expMonth"></div>
+  </div>
 </div>
 
 <!-- WALLET -->
@@ -392,6 +403,7 @@ let todos=[],exps=[],notes=[],wallets=[];
 let filt='all',nFilt='all',sumM=new Date(),isSyncing=false;
 let editMode=null,editId=null,curTab=0;
 let filterDate=null;
+let expViewMonth=new Date();
 
 const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2D6A4F',shopping:'#C8851A',entertainment:'#D94F2A',other:'#9BA3B0'};
 const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};

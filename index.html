@@ -626,7 +626,6 @@ async function addExp(){
 }
 async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
 let expPeriodMode=0;
-let expViewMonth=new Date();
 
 function setPeriodMode(m){
   expPeriodMode=m;

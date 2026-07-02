@@ -699,8 +699,6 @@ function renderExp(){
   const totalEl=document.getElementById('expPeriodTotal');
   if(totalEl)totalEl.textContent=periodExps.length?'รวม ฿'+fmt(total)+' ('+periodExps.length+' รายการ)':'ยังไม่มีรายการ';
   renderExpList(periodExps,document.getElementById('expMonth'));
-  renderExpList(exps.filter(e=>localMonthStr(e.date)===mStr(new Date())),document.getElementById('expMonth'));
-
 }
 
 // ── WALLET ────────────────────────────────────────────────

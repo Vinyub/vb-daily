@@ -973,6 +973,16 @@ function delBigItem(id){
   sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
 }
 
+function editBigItem(id){
+  const b=bigItems.find(x=>x.id===id);if(!b)return;
+  editMode='big';editId=id;
+  document.getElementById('editTitle').textContent='✏️ แก้ไข Big Item';
+  document.getElementById('editBody').innerHTML=`
+    <input class="sheet-inp" id="ei_bname" value="${esc(b.name)}" placeholder="ชื่อรายการ">
+    <input type="number" class="sheet-inp" id="ei_bamt" value="${b.amount}" placeholder="จำนวนเงิน">
+    <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">`;
+  document.getElementById('editOverlay').classList.add('open');
+}
 function renderBig(){
   const thisYear=new Date().getFullYear();
   const yearItems=bigItems.filter(b=>new Date(b.date).getFullYear()===thisYear);
@@ -989,7 +999,8 @@ function renderBig(){
     out+=`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">`;
     out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💎</div>`;
     out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}</div></div>`;
-    out+=`<div style="font-size:15px;font-weight:800;color:var(--gold)">฿${fmt(b.amount)}</div>`;
+    out+=`<div style="font-size:15px;font-weight:800;color:var(--gold);margin-right:4px">฿${fmt(b.amount)}</div>`;
+    out+=`<button onclick="editBigItem(${b.id})" style="color:var(--gold);background:none;border:none;cursor:pointer;font-size:14px;padding:2px 5px">✏️</button>`;
     out+=`<button onclick="delBigItem(${b.id})" style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
     out+=`</div>`;
   }

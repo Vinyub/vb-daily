@@ -20,6 +20,13 @@
   --r:14px;--rs:10px;
   --shadow:0 2px 8px rgba(61,43,26,.08),0 1px 3px rgba(0,0,0,.04);
 }
+[data-theme="dark"]{
+  --bg:#1A1208;--surface:#261A10;--surface2:#332214;--border:#4A3018;--border2:#5C3D20;
+  --text:#F0E8DC;--muted:#7A6050;--secondary:#B09878;
+  --coral-soft:rgba(217,79,42,.2);--green-soft:rgba(45,106,79,.2);
+  --amber-soft:rgba(200,133,26,.2);--purple-soft:rgba(107,79,160,.2);--red-soft:rgba(192,57,43,.2);
+  --shadow:0 2px 8px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.2);
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:500px;margin:0 auto;overflow-x:hidden}
 
 /* HEADER */
@@ -218,6 +225,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
           style="font-size:12px;color:#F5E8D0;background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 12px;font-weight:500;cursor:pointer;outline:none;color-scheme:dark;max-width:160px">
         <div id="dateLbl" style="display:none"></div>
       </div>
+      <button onclick="toggleDark()" id="darkBtn" style="background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:#F5E8D0">☀️</button>
       <button class="sync-btn" onclick="syncAll()">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncTxt">Sync</span>
@@ -395,6 +403,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   </div>
   <div class="card" style="padding:14px"><div class="card-label">แยก Category</div><div id="catBreak"></div></div>
   <div class="card" style="padding:14px"><div class="card-label">ค่าใช้จ่ายรายวัน</div><div id="dayBreak"></div></div>
+
+  <!-- BIG ITEMS -->
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-label" style="margin-bottom:0">💎 รายจ่ายก้อนใหญ่ปีนี้</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gold)" id="bigTotal">฿0</div>
+    </div>
+    <!-- Add form -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <input class="inp" id="bigName" placeholder="ชื่อรายการ เช่น Laptop, ตั๋วญี่ปุ่น" style="flex:2;min-width:150px">
+      <input type="number" class="inp" id="bigAmt" placeholder="฿" style="flex:1;min-width:80px">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input type="date" class="inp" id="bigDate" style="flex:1">
+      <button class="btn-main" style="flex:1;padding:11px" onclick="addBigItem()">+ เพิ่ม</button>
+    </div>
+    <div id="bigList"></div>
+  </div>
 </div>
 
 
@@ -498,7 +524,9 @@ async function syncAll(showMsg=true){
   if(isSyncing)return;isSyncing=true;setSyncStatus('syncing');
   try{
     // Pull from Sheets
-    const[tR,eR,nR,wR]=await Promise.all([
+    // Load bigItems from local cache first
+bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
+const[tR,eR,nR,wR]=await Promise.all([
       sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
     ]);
     // Merge: keep local items not yet in Sheets
@@ -550,7 +578,7 @@ document.addEventListener('touchend',e=>{
   if(Math.abs(dx)>60&&dy<100){if(dx<0&&curTab<4)goTab(curTab+1);else if(dx>0&&curTab>0)goTab(curTab-1)}
 },{passive:true});
 
-function renderAll(){renderTodo();renderNotes();renderExp();renderWallet();renderSum();updateStatStrip()}
+function renderAll(){renderTodo();renderNotes();renderExp();renderWallet();renderSum();renderBig();updateStatStrip()}
 function updateStatStrip(){
   const done=todos.filter(t=>t.done).length;
   document.getElementById('statTodo').textContent=`${done}/${todos.length}`;
@@ -895,6 +923,77 @@ function renderSum(){
   document.getElementById('dayBreak').innerHTML=ds.length
     ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:var(--gold2)"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
     :'<div class="empty">ยังไม่มีข้อมูล</div>';
+}
+
+// ── DARK MODE ─────────────────────────────────────────────
+function toggleDark(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('darkBtn').textContent=isDark?'☀️':'🌙';
+  localStorage.setItem('vb_dark',isDark?'0':'1');
+}
+// Set bigDate default
+;(()=>{const bd=document.getElementById('bigDate');if(bd)bd.value=todayStr();})();
+// Init dark mode
+;(()=>{
+  if(localStorage.getItem('vb_dark')==='1'){
+    document.documentElement.setAttribute('data-theme','dark');
+    const btn=document.getElementById('darkBtn');
+    if(btn)btn.textContent='🌙';
+  }
+})();
+
+// ── BIG ITEMS ──────────────────────────────────────────────
+const BK='vb_big_v1';
+let bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
+
+function saveBig(){localStorage.setItem(BK,JSON.stringify(bigItems));}
+
+async function addBigItem(){
+  const name=document.getElementById('bigName').value.trim();
+  const amt=parseFloat(document.getElementById('bigAmt').value);
+  const date=document.getElementById('bigDate').value||todayStr();
+  if(!name||!amt||amt<=0)return;
+  bigItems.unshift({id:Date.now(),name,amount:amt,date});
+  saveBig();
+  document.getElementById('bigName').value='';
+  document.getElementById('bigAmt').value='';
+  renderBig();
+  showToast('💎 บันทึกแล้ว');
+  // Push to Sheets
+  setSyncStatus('syncing');
+  try{await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]));setSyncStatus('ok');}
+  catch(e){setSyncStatus('error');}
+}
+
+function delBigItem(id){
+  bigItems=bigItems.filter(x=>x.id!==id);
+  saveBig();renderBig();
+  setSyncStatus('syncing');
+  sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
+}
+
+function renderBig(){
+  const thisYear=new Date().getFullYear();
+  const yearItems=bigItems.filter(b=>new Date(b.date).getFullYear()===thisYear);
+  const total=yearItems.reduce((s,b)=>s+b.amount,0);
+  const el=document.getElementById('bigTotal');
+  if(el)el.textContent='รวม ฿'+fmt(total);
+  const list=document.getElementById('bigList');
+  if(!list)return;
+  if(!yearItems.length){list.innerHTML='<div class="empty" style="padding:16px 0"><div class="empty-ic">💎</div>ยังไม่มีรายการ</div>';return;}
+  let out='';
+  for(const b of yearItems){
+    const d=new Date(b.date);
+    const dateStr=`${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)}`;
+    out+=`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">`;
+    out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💎</div>`;
+    out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}</div></div>`;
+    out+=`<div style="font-size:15px;font-weight:800;color:var(--gold)">฿${fmt(b.amount)}</div>`;
+    out+=`<button onclick="delBigItem(${b.id})" style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
+    out+=`</div>`;
+  }
+  list.innerHTML=out;
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});

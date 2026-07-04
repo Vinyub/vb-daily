@@ -594,7 +594,7 @@ async function sheetWrite(tab,rows){
   });
 }
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}
-function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:x[4]==='1',ts:String(x[5])}))}
+function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:String(x[4])==='1',ts:String(x[5])}))}
 function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash'])}
 function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash')}))}
 function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts])}

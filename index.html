@@ -405,6 +405,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
   <div class="card" style="padding:14px">
     <!-- Period mode selector -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer" onclick="toggleExpSection()">
+      <div class="card-label" style="margin-bottom:0;display:flex;align-items:center;gap:6px">รายการตามช่วงเวลา <span id="expSecChev" style="font-size:10px;transition:transform .2s;display:inline-block">▼</span></div>
+      <div style="font-size:11px;color:var(--muted)" id="expSecHint"></div>
+    </div>
+    <div id="expSection">
     <div style="display:flex;gap:6px;margin-bottom:12px">
       <button id="periodBtn0" onclick="setPeriodMode(0)" style="flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--grad-gold);color:#fff;font-size:12px;font-weight:700;cursor:pointer">วันนี้</button>
       <button id="periodBtn1" onclick="setPeriodMode(1)" style="flex:1;padding:7px 4px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--surface2);color:var(--secondary);font-size:12px;font-weight:600;cursor:pointer">ทั้งเดือน</button>
@@ -431,6 +436,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <!-- Total -->
     <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px" id="expPeriodTotal"></div>
     <div id="expMonth"></div>
+    </div><!-- /expSection -->
   </div>
 </div>
 
@@ -813,6 +819,7 @@ function renderExp(){
   const totalEl=document.getElementById('expPeriodTotal');
   if(totalEl)totalEl.textContent=periodExps.length?'รวม ฿'+fmt(total)+' ('+periodExps.length+' รายการ)':'ยังไม่มีรายการ';
   renderExpList(periodExps,document.getElementById('expMonth'));
+  applyExpSection();
 }
 
 // ── WALLET ────────────────────────────────────────────────
@@ -1089,6 +1096,25 @@ function editBigItem(id){
   document.getElementById('editOverlay').classList.add('open');
 }
 let bigSortMode=0; // 0=date desc, 1=amount desc
+let expSecCollapsed=localStorage.getItem('vb_exp_sec_collapsed')==='1';
+function toggleExpSection(){
+  expSecCollapsed=!expSecCollapsed;
+  localStorage.setItem('vb_exp_sec_collapsed',expSecCollapsed?'1':'0');
+  applyExpSection();
+}
+function applyExpSection(){
+  const sec=document.getElementById('expSection');
+  const chev=document.getElementById('expSecChev');
+  const hint=document.getElementById('expSecHint');
+  if(sec)sec.style.display=expSecCollapsed?'none':'block';
+  if(chev)chev.style.transform=expSecCollapsed?'rotate(-90deg)':'rotate(0deg)';
+  if(hint&&expSecCollapsed){
+    // show summary when collapsed
+    const tot=document.getElementById('expPeriodTotal');
+    hint.textContent=tot?tot.textContent:'';
+  } else if(hint){hint.textContent='';}
+}
+;(()=>{applyExpSection();})();
 let bigCollapsed=localStorage.getItem('vb_big_collapsed')==='1';
 function toggleBigSection(){
   bigCollapsed=!bigCollapsed;

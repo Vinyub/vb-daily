@@ -534,7 +534,7 @@ let editMode=null,editId=null,curTab=0;
 let filterDate=null;
 let expViewMonth=new Date();
 
-const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2D6A4F',shopping:'#C8851A',entertainment:'#D94F2A',other:'#9BA3B0'};
+const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2FA872',shopping:'#D6478A',entertainment:'#C43D2E',other:'#9BA3B0'};
 const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};
 const TL={work:'Work',client:'Client',personal:'Personal',other:'Other'};
 const PL={high:'High',med:'Med',low:'Low'};
@@ -1109,8 +1109,13 @@ function renderSum(){
         bars+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:8.5px;font-weight:700;fill:var(--secondary);font-variant-numeric:tabular-nums">${a>=1000?(a/1000).toFixed(1)+'k':a}</text>`;
       }
     });
+    const listRows=ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:52px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:${a===dm?'var(--gold)':'var(--gold2)'};opacity:${a===dm?1:.6}"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('');
     dayEl.innerHTML=`<div style="overflow-x:auto"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;min-width:100%">${bars}</svg></div>
-    <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">แท่งสีเข้ม = วันที่ใช้เยอะสุด</div>`;
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">แท่งสีเข้ม = วันที่ใช้เยอะสุด</div>
+    <details style="margin-top:10px">
+      <summary style="font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px">📋 ดูตัวเลขรายวัน <span style="font-size:9px">▼</span></summary>
+      <div style="margin-top:8px">${listRows}</div>
+    </details>`;
   }
 }
 

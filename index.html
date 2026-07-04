@@ -275,6 +275,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 [data-theme="dark"] .cat-nm{color:#D8C8B0}
 [data-theme="dark"] .bar-wrap{background:#3A2818}
 
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:24px;right:calc(50% - 250px + 20px);width:56px;height:56px;border-radius:50%;background:var(--grad-gold);color:#fff;border:none;font-size:26px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-3);z-index:150;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+@media(max-width:520px){.fab{right:20px}}
+
 </style>
 </head>
 <body>
@@ -332,16 +338,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 
 <!-- TODO -->
 <div class="panel" id="panel-todo">
-  <div class="card">
-    <div class="irow">
-      <input class="inp" id="tInput" placeholder="เพิ่ม task..." onkeydown="if(event.key==='Enter')addTodo()">
-      <button class="btn-plus" onclick="addTodo()">+</button>
-    </div>
-    <div class="irow">
-      <select class="sel" id="tTag"><option value="work">🏢 Work</option><option value="client">🤝 Client</option><option value="personal">👤 Personal</option><option value="other">📌 Other</option></select>
-      <select class="sel" id="tPri"><option value="high">🔴 High</option><option value="med">🟡 Med</option><option value="low">🟢 Low</option></select>
-    </div>
-  </div>
   <div class="chips" id="tFilters">
     <div class="chip active" onclick="setF('all',this)">All</div>
     <div class="chip" onclick="setF('work',this)">Work</div>
@@ -376,28 +372,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 
 <!-- EXPENSE -->
 <div class="panel" id="panel-expense">
-  <div class="card">
-    <div class="card-label">เพิ่มรายจ่าย</div>
-    <div class="irow">
-      <input type="number" class="inp" id="eAmt" placeholder="จำนวนเงิน (฿)" style="flex:1.2">
-      <select class="sel" id="eCat">
-        <option value="food">🍜 อาหาร</option><option value="transport">🚕 เดินทาง</option>
-        <option value="work">💼 งาน</option><option value="health">💊 สุขภาพ</option>
-        <option value="shopping">🛍 ช้อปปิ้ง</option><option value="entertainment">🎬 บันเทิง</option>
-        <option value="other">📦 อื่นๆ</option>
-      </select>
-    </div>
-    <div class="irow">
-      <input class="inp" id="eNote" placeholder="Note เช่น กาแฟ, แท็กซี่" onkeydown="if(event.key==='Enter')addExp()">
-      <select class="sel" id="ePay">
-        <option value="cash">💵 เงินสด</option>
-        <option value="ktc">💳 KTC</option>
-        <option value="the1">🌟 The 1</option>
-      </select>
-    </div>
-    <div id="expWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — กรุณาเติมเงินใน Wallet ก่อน แต่ยังบันทึกได้</div>
-    <button class="btn-main" onclick="addExp()">+ เพิ่มรายจ่าย</button>
-  </div>
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
   <div class="card" style="padding:14px">
     <!-- Period mode selector -->
@@ -437,16 +411,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <div style="font-size:44px;font-weight:900;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums" id="walletBalance">฿0</div>
     <div style="font-size:12px;opacity:.6;margin-top:6px" id="walletSub">เติมแล้ว ฿0 · ใช้ไป ฿0</div>
     <div style="position:absolute;bottom:16px;right:16px;font-size:28px;opacity:.15">💰</div>
-  </div>
-
-  <!-- เติมเงิน -->
-  <div class="card">
-    <div class="card-label">เติมเงินสด</div>
-    <div class="irow">
-      <input type="number" class="inp" id="wAmt" placeholder="จำนวนเงิน (฿)">
-      <input class="inp" id="wNote" placeholder="Note เช่น ATM, โอน" style="flex:1.2">
-    </div>
-    <button class="btn-main" onclick="addWallet()">+ เติมเงิน</button>
   </div>
 
   <!-- ประวัติ -->
@@ -498,6 +462,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 </div>
 
 
+
+<button class="fab" id="fabBtn" onclick="openAddSheet()">+</button>
 
 <!-- EDIT OVERLAY -->
 <div class="overlay" id="editOverlay" onclick="if(event.target===this)closeOverlay()">
@@ -675,11 +641,6 @@ function closeOverlay(){document.getElementById('editOverlay').classList.remove(
 
 
 // ── TODO ──────────────────────────────────────────────────
-async function addTodo(){
-  const v=document.getElementById('tInput').value.trim();if(!v)return;
-  todos.unshift({id:Date.now(),text:v,tag:document.getElementById('tTag').value,pri:document.getElementById('tPri').value,done:false,ts:new Date().toISOString()});
-  document.getElementById('tInput').value='';renderTodo();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
-}
 async function togTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;renderTodo();updateStatStrip();await pushTodos()}}
 async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();updateStatStrip();await pushTodos();showToast('🗑 ลบแล้ว')}
 function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo()}
@@ -749,23 +710,6 @@ function renderTodo(){
 }
 
 // ── EXPENSE ───────────────────────────────────────────────
-async function addExp(){
-  const a=parseFloat(document.getElementById('eAmt').value);if(!a||a<=0){document.getElementById('eAmt').focus();return}
-  const cat=document.getElementById('eCat').value;
-  const note=document.getElementById('eNote').value.trim()||CL[cat].replace(/^\S+ /,'');
-  const pay=document.getElementById('ePay').value;
-  // Wallet warning for cash
-  if(pay==='cash'){
-    const bal=walletBalance();
-    if(bal-a<0){document.getElementById('expWarnBar').style.display='flex'}
-    else{document.getElementById('expWarnBar').style.display='none'}
-  }
-  exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay});
-  document.getElementById('eAmt').value='';document.getElementById('eNote').value='';
-
-  renderExp();renderWallet();renderSum();updateStatStrip();
-  showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
-}
 async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
 let expPeriodMode=0;
 
@@ -840,14 +784,6 @@ function renderExp(){
 }
 
 // ── WALLET ────────────────────────────────────────────────
-async function addWallet(){
-  const a=parseFloat(document.getElementById('wAmt').value);if(!a||a<=0){document.getElementById('wAmt').focus();return}
-  const note=document.getElementById('wNote').value.trim()||'เติมเงิน';
-  wallets.unshift({id:Date.now(),amount:a,note,ts:new Date().toISOString()});
-  document.getElementById('wAmt').value='';document.getElementById('wNote').value='';
-  renderWallet();updateStatStrip();
-  showToast('💾 กำลังบันทึก...',1500);await pushWallets();showToast('✅ เติมเงินแล้ว');
-}
 async function delWallet(id){wallets=wallets.filter(x=>x.id!==id);renderWallet();updateStatStrip();await pushWallets();showToast('🗑 ลบแล้ว')}
 function renderWallet(){
   const bal=walletBalance();
@@ -981,7 +917,23 @@ function openEditSheet(mode,id){
 }
 
 async function saveEdit(){
-  if(editMode==='todo'){
+  if(editMode==='todo_new'){
+    const v=document.getElementById('ei_text').value.trim();if(!v)return;
+    todos.unshift({id:Date.now(),text:v,tag:document.getElementById('ei_tag').value,pri:document.getElementById('ei_pri').value,done:false,ts:new Date().toISOString()});
+    closeOverlay();renderTodo();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='exp_new'){
+    const a=parseFloat(document.getElementById('ei_eamt').value);if(!a||a<=0){document.getElementById('ei_eamt').focus();return}
+    const cat=document.getElementById('ei_ecat').value;
+    const note=document.getElementById('ei_enote').value.trim()||CL[cat].replace(/^\S+ /,'');
+    const pay=document.getElementById('ei_epay').value;
+    exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay});
+    closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='wallet_new'){
+    const a=parseFloat(document.getElementById('ei_wamt').value);if(!a||a<=0){document.getElementById('ei_wamt').focus();return}
+    const note=document.getElementById('ei_wnote').value.trim()||'เติมเงิน';
+    wallets.unshift({id:Date.now(),amount:a,note,ts:new Date().toISOString()});
+    closeOverlay();renderWallet();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushWallets();showToast('✅ เติมเงินแล้ว');
+  }else if(editMode==='todo'){
     const t=todos.find(x=>x.id===editId);if(!t)return;
     t.text=document.getElementById('ei_text').value.trim()||t.text;
     t.tag=document.getElementById('ei_tag').value;t.pri=document.getElementById('ei_pri').value;
@@ -1144,6 +1096,59 @@ function renderBig(){
     out+=`</div>`;
   });
   list.innerHTML=out;
+}
+
+
+// ── FAB: opens add sheet per current tab ──
+function openAddSheet(){
+  if(curTab===0)openTodoAddSheet();
+  else if(curTab===1)openNoteSheet(null);
+  else if(curTab===2)openExpAddSheet();
+  else if(curTab===3)openWalletAddSheet();
+  else openExpAddSheet(); // summary defaults to expense
+}
+
+function openTodoAddSheet(){
+  editMode='todo_new';editId=null;
+  document.getElementById('editTitle').textContent='✓ เพิ่ม Task ใหม่';
+  document.getElementById('editBody').innerHTML=`
+    <input class="sheet-inp" id="ei_text" placeholder="เพิ่ม task...">
+    <div class="sheet-row">
+      <select class="sheet-sel" id="ei_tag"><option value="work">🏢 Work</option><option value="client">🤝 Client</option><option value="personal">👤 Personal</option><option value="other">📌 Other</option></select>
+      <select class="sheet-sel" id="ei_pri"><option value="high">🔴 High</option><option value="med">🟡 Med</option><option value="low">🟢 Low</option></select>
+    </div>`;
+  document.getElementById('editOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ei_text')?.focus(),200);
+}
+
+function openExpAddSheet(){
+  editMode='exp_new';editId=null;
+  document.getElementById('editTitle').textContent='฿ เพิ่มรายจ่าย';
+  document.getElementById('editBody').innerHTML=`
+    <input type="number" class="sheet-inp" id="ei_eamt" placeholder="จำนวนเงิน (฿)">
+    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px">
+      <option value="food">🍜 อาหาร</option><option value="transport">🚕 เดินทาง</option>
+      <option value="work">💼 งาน</option><option value="health">💊 สุขภาพ</option>
+      <option value="shopping">🛍 ช้อปปิ้ง</option><option value="entertainment">🎬 บันเทิง</option>
+      <option value="other">📦 อื่นๆ</option>
+    </select>
+    <input class="sheet-inp" id="ei_enote" placeholder="Note เช่น กาแฟ, แท็กซี่">
+    <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px">
+      <option value="cash">💵 เงินสด</option><option value="ktc">💳 KTC</option><option value="the1">🌟 The 1</option>
+    </select>
+    <div id="sheetWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — ยังบันทึกได้ แต่ Wallet จะติดลบ</div>`;
+  document.getElementById('editOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ei_eamt')?.focus(),200);
+}
+
+function openWalletAddSheet(){
+  editMode='wallet_new';editId=null;
+  document.getElementById('editTitle').textContent='💰 เติมเงินสด';
+  document.getElementById('editBody').innerHTML=`
+    <input type="number" class="sheet-inp" id="ei_wamt" placeholder="จำนวนเงิน (฿)">
+    <input class="sheet-inp" id="ei_wnote" placeholder="Note เช่น ATM, โอน">`;
+  document.getElementById('editOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ei_wamt')?.focus(),200);
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});

@@ -213,6 +213,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   .del-btn{font-size:20px;padding:3px 5px}
   .chk{width:24px;height:24px}
 }
+
+/* ── DARK THEME FULL COVERAGE ── */
+[data-theme="dark"] .sc-coral{background:linear-gradient(135deg,rgba(217,79,42,.18),rgba(217,79,42,.08));border-color:rgba(217,79,42,.35)}
+[data-theme="dark"] .sc-teal{background:linear-gradient(135deg,rgba(45,106,79,.2),rgba(45,106,79,.08));border-color:rgba(45,106,79,.4)}
+[data-theme="dark"] .sc-blue{background:linear-gradient(135deg,rgba(212,139,58,.15),rgba(212,139,58,.06));border-color:rgba(212,139,58,.3)}
+[data-theme="dark"] .sc-purple{background:linear-gradient(135deg,rgba(107,79,160,.2),rgba(107,79,160,.08));border-color:rgba(107,79,160,.4)}
+[data-theme="dark"] .sc-amber{background:linear-gradient(135deg,rgba(200,133,26,.18),rgba(200,133,26,.08));border-color:rgba(200,133,26,.35)}
+[data-theme="dark"] .sc-green{background:linear-gradient(135deg,rgba(45,106,79,.2),rgba(45,106,79,.08));border-color:rgba(45,106,79,.4)}
+[data-theme="dark"] .sv-blue{color:#E0A860}
+[data-theme="dark"] .sv-teal{color:#6BC49A}
+[data-theme="dark"] .sv-green{color:#6BC49A}
+/* Stat strip icon boxes */
+[data-theme="dark"] #statStrip > div > div:first-child{background:linear-gradient(135deg,rgba(212,139,58,.25),rgba(212,139,58,.12)) !important;box-shadow:none !important}
+[data-theme="dark"] #statStrip{border-top-color:rgba(212,139,58,.4)}
+/* Badges */
+[data-theme="dark"] .bdg-work{background:rgba(59,111,232,.2);color:#7BA3F0}
+[data-theme="dark"] .pay-ktc{background:rgba(59,111,232,.2);color:#7BA3F0}
+/* Big item icon boxes */
+[data-theme="dark"] #bigList > div > div:first-child{background:linear-gradient(135deg,rgba(212,139,58,.22),rgba(212,139,58,.1)) !important}
+/* Inputs date picker */
+[data-theme="dark"] input[type="date"]{color-scheme:dark}
+/* Note headers use NTC inline — acceptable, they're semi-transparent already */
+
 </style>
 </head>
 <body>
@@ -414,9 +437,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 
   <!-- BIG ITEMS -->
   <div class="card" style="padding:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-label" style="margin-bottom:0">💎 รายจ่ายก้อนใหญ่ปีนี้</div>
-      <div style="font-size:13px;font-weight:700;color:var(--gold)" id="bigTotal">฿0</div>
+      <div style="font-size:13px;font-weight:800;color:var(--gold)" id="bigTotal">฿0</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button id="bigSort0" onclick="setBigSort(0)" class="chip active" style="border:1.5px solid var(--border)">📅 วันที่</button>
+      <button id="bigSort1" onclick="setBigSort(1)" class="chip" style="border:1.5px solid var(--border)">💰 จำนวนเงิน</button>
     </div>
     <!-- Add form -->
     <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
@@ -1007,9 +1034,24 @@ function editBigItem(id){
     <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">`;
   document.getElementById('editOverlay').classList.add('open');
 }
+let bigSortMode=0; // 0=date desc, 1=amount desc
+function setBigSort(m){
+  bigSortMode=m;
+  const b0=document.getElementById('bigSort0'),b1=document.getElementById('bigSort1');
+  if(b0&&b1){
+    b0.classList.toggle('active',m===0);
+    b1.classList.toggle('active',m===1);
+  }
+  renderBig();
+}
 function renderBig(){
   const thisYear=new Date().getFullYear();
-  const yearItems=bigItems.filter(b=>new Date(b.date).getFullYear()===thisYear);
+  let yearItems=bigItems.filter(b=>new Date(b.date).getFullYear()===thisYear);
+  if(bigSortMode===1){
+    yearItems=[...yearItems].sort((a,b)=>b.amount-a.amount);
+  } else {
+    yearItems=[...yearItems].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  }
   const total=yearItems.reduce((s,b)=>s+b.amount,0);
   const el=document.getElementById('bigTotal');
   if(el)el.textContent='รวม ฿'+fmt(total);
@@ -1017,17 +1059,20 @@ function renderBig(){
   if(!list)return;
   if(!yearItems.length){list.innerHTML='<div class="empty" style="padding:16px 0"><div class="empty-ic">💎</div>ยังไม่มีรายการ</div>';return;}
   let out='';
-  for(const b of yearItems){
+  const rankIcons=['🥇','🥈','🥉'];
+  yearItems.forEach((b,idx)=>{
     const d=new Date(b.date);
     const dateStr=`${d.getDate()}/${d.getMonth()+1}/${(d.getFullYear()+543).toString().slice(2)}`;
+    const icon=(bigSortMode===1&&idx<3)?rankIcons[idx]:'💎';
+    const rankStyle=(bigSortMode===1&&idx<3)?'border:1px solid rgba(212,139,58,.4);':'';
     out+=`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">`;
-    out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💎</div>`;
+    out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));${rankStyle}display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>`;
     out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}</div></div>`;
     out+=`<div style="font-size:15px;font-weight:800;color:var(--gold);margin-right:4px">฿${fmt(b.amount)}</div>`;
     out+=`<button onclick="editBigItem(${b.id})" style="color:var(--gold);background:none;border:none;cursor:pointer;font-size:14px;padding:2px 5px">✏️</button>`;
     out+=`<button onclick="delBigItem(${b.id})" style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
     out+=`</div>`;
-  }
+  });
   list.innerHTML=out;
 }
 

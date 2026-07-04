@@ -1082,11 +1082,12 @@ function renderSum(){
       else lines.push(`⚖️ ใช้เท่ากับเดือนก่อน (฿${fmt(pTotal)})`);
     }
 
-    // 2. fastest growing category
+    // 2. fastest growing category (self-contained maps — no outer deps)
     if(pTotal>0&&total>0){
       const pCt={};pExp.forEach(e=>{pCt[e.cat]=(pCt[e.cat]||0)+e.amount});
+      const curCt={};mExp.forEach(e=>{curCt[e.cat]=(curCt[e.cat]||0)+e.amount});
       let topCat=null,topDelta=0;
-      Object.entries(ct).forEach(([c,a])=>{
+      Object.entries(curCt).forEach(([c,a])=>{
         const delta=a-(pCt[c]||0);
         if(delta>topDelta){topDelta=delta;topCat=c;}
       });

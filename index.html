@@ -527,7 +527,7 @@ async function syncAll(showMsg=true){
     // Load bigItems from local cache first
 bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
 const[tR,eR,nR,wR,bR]=await Promise.all([
-      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
+      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets'),sheetRead('bigitems')
     ]);
     // Merge: keep local items not yet in Sheets
     todos=mergeData(todos,rowsToTodos(tR));
@@ -535,7 +535,7 @@ const[tR,eR,nR,wR,bR]=await Promise.all([
     notes=mergeData(notes,rowsToNotes(nR));
     wallets=mergeData(wallets,rowsToWallets(wR));
     if(bR&&bR.length){
-      const remoteBig=bR.filter(r=>r[0]).map(r=>({id:+r[0],name:String(r[1]),amount:+r[2],date:String(r[3])}));
+      const remoteBig=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr};});
       bigItems=mergeData(bigItems,remoteBig);
       saveBig();
     }

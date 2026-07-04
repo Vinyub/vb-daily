@@ -477,7 +477,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <div class="sum-card sc-green" onclick="goTab(3)"><div class="s-lbl">Wallet คงเหลือ</div><div class="s-val sv-green" id="sWallet">฿0</div><div class="s-hint">กดไป Wallet</div></div>
   </div>
   <div class="card" style="padding:14px"><div class="card-label">แยก Category</div><div id="catBreak"></div></div>
-  <div class="card" style="padding:14px"><div class="card-label">ค่าใช้จ่ายรายวัน</div><div id="dayBreak"></div></div>
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:4px" onclick="toggleDayBreak()">
+      <div class="card-label" style="margin-bottom:0;display:flex;align-items:center;gap:6px">ค่าใช้จ่ายรายวัน <span id="dayBreakChev" style="font-size:10px;transition:transform .2s;display:inline-block">▼</span></div>
+      <div style="font-size:11px;color:var(--muted)" id="dayBreakHint"></div>
+    </div>
+    <div id="dayBreakSection"><div id="dayBreak"></div></div>
+  </div>
 
   <!-- BIG ITEMS -->
   <div class="card" style="padding:14px">
@@ -1051,6 +1057,7 @@ function renderSum(){
     :'<div class="empty">ยังไม่มีข้อมูล</div>';
   const dt={};mExp.forEach(e=>{const d=e.date.slice(8,10);dt[d]=(dt[d]||0)+e.amount});
   const ds=Object.entries(dt).sort((a,b)=>+a[0]-+b[0]);const dm=ds.length?Math.max(...ds.map(d=>d[1])):1;
+  applyDayBreak();
   document.getElementById('dayBreak').innerHTML=ds.length
     ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:var(--gold2)"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
     :'<div class="empty">ยังไม่มีข้อมูล</div>';
@@ -1115,6 +1122,20 @@ function editBigItem(id){
   document.getElementById('editOverlay').classList.add('open');
 }
 let bigSortMode=0; // 0=date desc, 1=amount desc
+let dayBreakCollapsed=localStorage.getItem('vb_day_break_collapsed')==='1';
+function toggleDayBreak(){
+  dayBreakCollapsed=!dayBreakCollapsed;
+  localStorage.setItem('vb_day_break_collapsed',dayBreakCollapsed?'1':'0');
+  applyDayBreak();
+}
+function applyDayBreak(){
+  const sec=document.getElementById('dayBreakSection');
+  const chev=document.getElementById('dayBreakChev');
+  const hint=document.getElementById('dayBreakHint');
+  if(sec)sec.style.display=dayBreakCollapsed?'none':'block';
+  if(chev)chev.style.transform=dayBreakCollapsed?'rotate(-90deg)':'rotate(0deg)';
+}
+;(()=>{applyDayBreak();})();
 let walletHistCollapsed=localStorage.getItem('vb_wallet_hist_collapsed')==='1';
 function toggleWalletHist(){
   walletHistCollapsed=!walletHistCollapsed;

@@ -730,7 +730,13 @@ function renderTodo(){
   document.getElementById('progFill').style.width=pct+'%';
   document.getElementById('progTxt').textContent=`${done}/${todos.length} เสร็จ`;
   const el=document.getElementById('todoList');
-  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">เพิ่มด้านบน</span></div>`;return}
+  if(!list.length){
+    if(filterDate){
+      el.innerHTML=`<div class="empty" style="cursor:pointer" onclick="clearDateFilter()"><div class="empty-ic">📅</div>ไม่มี task ในวันที่เลือก<br><span style="font-size:12px;color:var(--gold);font-weight:700">กดที่นี่เพื่อดูทั้งหมด</span></div>`;
+    } else {
+      el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">กดปุ่ม + เพื่อเพิ่ม</span></div>`;
+    }
+    return}
   const tagIcon={work:'🏢',client:'🤝',personal:'👤',other:'📌'};
   const priColor={high:'#D94F2A',med:'#C8851A',low:'#2D6A4F'};
   const priLabel={high:'🔴 High',med:'🟡 Med',low:'🟢 Low'};
@@ -790,7 +796,13 @@ function chgExpMonth(d){
 }
 
 function renderExpList(arr,el){
-  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>';return}
+  if(!arr.length){
+    if(filterDate&&el.id==='expToday'){
+      el.innerHTML='<div class="empty" style="cursor:pointer" onclick="clearDateFilter()"><div class="empty-ic">📅</div>ไม่มีรายการวันที่เลือก<br><span style="font-size:12px;color:var(--gold);font-weight:700">กดที่นี่เพื่อกลับวันนี้</span></div>';
+    } else {
+      el.innerHTML='<div class="empty"><div class="empty-ic">💸</div>ยังไม่มีรายการ</div>';
+    }
+    return}
   let out='';
   for(const e of arr){
     out+=`<div class="exp-item">`;
@@ -1122,6 +1134,12 @@ function renderSum(){
       <div style="margin-top:8px">${listRows}</div>
     </details>`;
   }
+}
+
+function clearDateFilter(){
+  const picker=document.getElementById('datePicker');
+  if(picker)picker.value=todayStr();
+  onDateChange(todayStr());
 }
 
 // ── DRILL-DOWN: chart bar → expense day view ──

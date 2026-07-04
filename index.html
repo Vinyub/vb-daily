@@ -597,20 +597,22 @@ function mergeData(local, remote){
 async function syncAll(showMsg=true){
   if(isSyncing)return;isSyncing=true;setSyncStatus('syncing');
   try{
-    // Pull from Sheets
-    // Load bigItems from local cache first
-bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
-const[tR,eR,nR,wR,bR]=await Promise.all([
+    // 1) PUSH local state first — user actions always win
+    await sheetWrite('todos',todosToRows(todos));
+    await sheetWrite('expenses',expsToRows(exps));
+    await sheetWrite('notes',notesToRows(notes));
+    await sheetWrite('wallets',walletsToRows(wallets));
+    await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]));
+    // 2) PULL back to confirm
+    const[tR,eR,nR,wR,bR]=await Promise.all([
       sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets'),sheetRead('bigitems')
     ]);
-    // Merge: keep local items not yet in Sheets
-    todos=mergeData(todos,rowsToTodos(tR));
-    exps=mergeData(exps,rowsToExps(eR));
-    notes=mergeData(notes,rowsToNotes(nR));
-    wallets=mergeData(wallets,rowsToWallets(wR));
+    todos=rowsToTodos(tR);
+    exps=rowsToExps(eR);
+    notes=rowsToNotes(nR);
+    wallets=rowsToWallets(wR);
     if(bR&&bR.length){
-      const remoteBig=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr};});
-      bigItems=mergeData(bigItems,remoteBig);
+      bigItems=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr};});
       saveBig();
     }
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
@@ -681,22 +683,13 @@ async function addTodo(){
 async function togTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;renderTodo();updateStatStrip();await pushTodos()}}
 async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();updateStatStrip();await pushTodos();showToast('🗑 ลบแล้ว')}
 function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo()}
-function renderTodo(){
-  let list=todos;
-  if(filterDate)list=list.filter(t=>t.ts&&localDateStr(t.ts)===filterDate);
-  if(filt==='pending')list=list.filter(t=>!t.done);
-  else if(filt==='done')list=list.filter(t=>t.done);
-  else if(['work','client','personal','other'].includes(filt))list=list.filter(t=>t.tag===filt);
-  const done=todos.filter(t=>t.done).length;
-  const pct=todos.length?Math.round(done/todos.length*100):0;
-  document.getElementById('progFill').style.width=pct+'%';
-  document.getElementById('progTxt').textContent=`${done}/${todos.length} เสร็จ`;
-  const el=document.getElementById('todoList');
-  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">เพิ่มด้านบน</span></div>`;return}
-  const tagIcon={work:'🏢',client:'🤝',personal:'👤',other:'📌'};
-  const priColor={high:'#D94F2A',med:'#C8851A',low:'#2D6A4F'};
-  const priLabel={high:'🔴 High',med:'🟡 Med',low:'🟢 Low'};
-  el.innerHTML=list.map(t=>`
+let doneCollapsed=true;
+function toggleDoneSection(){
+  doneCollapsed=!doneCollapsed;
+  renderTodo();
+}
+function todoItemHtml(t,tagIcon,priColor,priLabel){
+  return `
   <div class="todo-item ${t.done?'done':''}" style="border-left:4px solid ${priColor[t.pri]}">
     <div style="background:${priColor[t.pri]}18;width:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 0;flex-shrink:0">
       <div class="chk ${t.done?'on':''}" onclick="togTodo(${t.id})" style="margin:0">${t.done?'✓':''}</div>
@@ -714,7 +707,45 @@ function renderTodo(){
       <button class="edit-btn" onclick="openEditSheet('todo',${t.id})">✏️</button>
       <button class="del-btn" onclick="delTodo(${t.id})">×</button>
     </div>
-  </div>`).join('');
+  </div>`;
+}
+function renderTodo(){
+  let list=todos;
+  if(filterDate)list=list.filter(t=>t.ts&&localDateStr(t.ts)===filterDate);
+  if(filt==='pending')list=list.filter(t=>!t.done);
+  else if(filt==='done')list=list.filter(t=>t.done);
+  else if(['work','client','personal','other'].includes(filt))list=list.filter(t=>t.tag===filt);
+  const done=todos.filter(t=>t.done).length;
+  const pct=todos.length?Math.round(done/todos.length*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=`${done}/${todos.length} เสร็จ`;
+  const el=document.getElementById('todoList');
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="empty-ic">✓</div>ไม่มี task<br><span style="font-size:12px">เพิ่มด้านบน</span></div>`;return}
+  const tagIcon={work:'🏢',client:'🤝',personal:'👤',other:'📌'};
+  const priColor={high:'#D94F2A',med:'#C8851A',low:'#2D6A4F'};
+  const priLabel={high:'🔴 High',med:'🟡 Med',low:'🟢 Low'};
+
+  // Split pending / done — only in 'All' and tag filters (not in pending/done filters)
+  if(filt==='pending'||filt==='done'){
+    el.innerHTML=list.map(t=>todoItemHtml(t,tagIcon,priColor,priLabel)).join('');
+    return;
+  }
+  const pending=list.filter(t=>!t.done);
+  const doneList=list.filter(t=>t.done);
+  let out=pending.map(t=>todoItemHtml(t,tagIcon,priColor,priLabel)).join('');
+  if(!pending.length&&doneList.length){
+    out+=`<div class="empty" style="padding:14px 0"><div class="empty-ic">🎉</div>เสร็จหมดแล้ว!</div>`;
+  }
+  if(doneList.length){
+    out+=`<div onclick="toggleDoneSection()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;margin-top:8px;cursor:pointer;user-select:none;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px">✓ เสร็จแล้ว (${doneList.length})</div>
+      <div style="font-size:11px;color:var(--muted);transition:transform .2s;transform:rotate(${doneCollapsed?0:180}deg)">▼</div>
+    </div>`;
+    if(!doneCollapsed){
+      out+=doneList.map(t=>todoItemHtml(t,tagIcon,priColor,priLabel)).join('');
+    }
+  }
+  el.innerHTML=out;
 }
 
 // ── EXPENSE ───────────────────────────────────────────────

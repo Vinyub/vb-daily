@@ -893,7 +893,18 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
     e.pay=document.getElementById('ei_epay').value;
-closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+    closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='big'){
+    const b=bigItems.find(x=>x.id===editId);if(!b)return;
+    b.name=document.getElementById('ei_bname').value.trim()||b.name;
+    b.amount=parseFloat(document.getElementById('ei_bamt').value)||b.amount;
+    b.date=document.getElementById('ei_bdate').value||b.date;
+    saveBig();closeOverlay();renderBig();
+    showToast('💾 กำลังบันทึก...',1500);
+    setSyncStatus('syncing');
+    sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]))
+      .then(()=>{setSyncStatus('ok');showToast('✅ บันทึกแล้ว');})
+      .catch(()=>setSyncStatus('error'));
   }
 }
 

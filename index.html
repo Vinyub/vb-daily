@@ -472,7 +472,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <div class="sum-grid">
     <div class="sum-card sc-coral" onclick="goTab(0)"><div class="s-lbl">Tasks ค้าง</div><div class="s-val sv-coral" id="sPend">0</div><div class="s-hint">กดไป To-Do</div></div>
     <div class="sum-card sc-teal" onclick="goTab(0)"><div class="s-lbl">Tasks เสร็จ</div><div class="s-val sv-teal" id="sDone">0</div><div class="s-hint">กดไป To-Do</div></div>
-    <div class="sum-card sc-blue" onclick="goTab(2)"><div class="s-lbl">รายจ่ายเดือนนี้</div><div class="s-val sv-blue" id="sTotal">฿0</div><div class="s-hint">กดไป Expenses</div></div>
+    <div class="sum-card sc-blue" id="budgetCard" onclick="openBudgetSheet()"></div>
     <div class="sum-card sc-amber" onclick="goTab(2)"><div class="s-lbl">วันนี้</div><div class="s-val sv-amber" id="sToday">฿0</div><div class="s-hint">กดไป Expenses</div></div>
     <div class="sum-card sc-purple" onclick="goTab(1)" style="grid-column:span 1"><div class="s-lbl">Notes ทั้งหมด</div><div class="s-val sv-purple" id="sNotes">0</div><div class="s-hint">กดไป Notes</div></div>
     <div class="sum-card sc-green" onclick="goTab(3)"><div class="s-lbl">Wallet คงเหลือ</div><div class="s-val sv-green" id="sWallet">฿0</div><div class="s-hint">กดไป Wallet</div></div>
@@ -1033,6 +1033,10 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
     e.pay=document.getElementById('ei_epay').value;
     closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
+  }else if(editMode==='budget'){
+    const v=parseFloat(document.getElementById('ei_budget').value)||0;
+    localStorage.setItem('vb_budget',v);
+    closeOverlay();renderSum();showToast(v>0?'🎯 ตั้งงบ ฿'+fmt(v)+' แล้ว':'ปิด budget แล้ว');
   }else if(editMode==='big'){
     const b=bigItems.find(x=>x.id===editId);if(!b)return;
     b.name=document.getElementById('ei_bname').value.trim()||b.name;
@@ -1047,6 +1051,67 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
   }
 }
 
+// ── BUDGET (cash-only, localStorage) ──────────────────────
+function getBudget(){return parseFloat(localStorage.getItem('vb_budget'))||0}
+
+function openBudgetSheet(){
+  editMode='budget';editId=null;
+  const cur=getBudget();
+  document.getElementById('editTitle').textContent='🎯 งบเงินสดต่อเดือน';
+  document.getElementById('editBody').innerHTML=`
+    <input type="number" class="sheet-inp" id="ei_budget" value="${cur||''}" placeholder="เช่น 15000">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">นับเฉพาะรายจ่าย 💵 เงินสด · บัตรไม่นับ<br>ตั้ง 0 หรือเว้นว่าง = ปิด budget</div>`;
+  document.getElementById('editOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ei_budget')?.focus(),200);
+}
+
+function renderBudgetCard(mExp){
+  const card=document.getElementById('budgetCard');
+  if(!card)return;
+  const budget=getBudget();
+  const cashSpent=mExp.filter(e=>(e.pay||'cash')==='cash').reduce((s,e)=>s+e.amount,0);
+
+  if(!budget){
+    card.innerHTML=`<div class="s-lbl">รายจ่ายเงินสดเดือนนี้</div>
+      <div class="s-val sv-blue" style="font-variant-numeric:tabular-nums">฿${fmt(cashSpent)}</div>
+      <div class="s-hint">กดเพื่อตั้งงบ 🎯</div>`;
+    return;
+  }
+
+  const pct=Math.min(999,Math.round(cashSpent/budget*100));
+  const remain=budget-cashSpent;
+  // ring geometry
+  const R=24,C=2*Math.PI*R;
+  const ringPct=Math.min(1,cashSpent/budget);
+  const col=pct<70?'#2FA872':pct<=100?'#C8851A':'#D94F2A';
+  // pace projection — current month only
+  const now=new Date();
+  const isCur=mStr(now)===mStr(sumM);
+  let paceLine='';
+  if(isCur){
+    const dim=new Date(sumM.getFullYear(),sumM.getMonth()+1,0).getDate();
+    const proj=Math.round(cashSpent/now.getDate()*dim);
+    const daysLeft=dim-now.getDate();
+    if(proj>budget)paceLine=`<div style="font-size:10px;color:#D94F2A;font-weight:700;margin-top:3px">⚠️ pace นี้จะเกิน ~฿${fmt(proj-budget)}</div>`;
+    else paceLine=`<div style="font-size:10px;color:var(--muted);margin-top:3px">เหลือ ${daysLeft} วัน · pace ปลอดภัย</div>`;
+  }
+  card.innerHTML=`
+    <div class="s-lbl">งบเงินสด ฿${fmt(budget)} 🎯</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:2px">
+      <svg width="58" height="58" viewBox="0 0 58 58" style="flex-shrink:0">
+        <circle r="${R}" cx="29" cy="29" fill="none" stroke="var(--surface2)" stroke-width="7"/>
+        <circle r="${R}" cx="29" cy="29" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="${ringPct*C} ${C}" transform="rotate(-90 29 29)"/>
+        <text x="29" y="33" text-anchor="middle" style="font-size:12px;font-weight:800;fill:${col};font-variant-numeric:tabular-nums">${pct}%</text>
+      </svg>
+      <div style="min-width:0">
+        <div style="font-size:15px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums">฿${fmt(cashSpent)}</div>
+        <div style="font-size:10.5px;color:${remain<0?'#D94F2A':'var(--muted)'};font-variant-numeric:tabular-nums">${remain<0?'เกิน ฿'+fmt(-remain):'เหลือ ฿'+fmt(remain)}</div>
+        ${paceLine}
+      </div>
+    </div>`;
+}
+
 // ── SUMMARY ───────────────────────────────────────────────
 function chgM(d){sumM=new Date(sumM.getFullYear(),sumM.getMonth()+d,1);renderSum()}
 function renderSum(){
@@ -1056,7 +1121,7 @@ function renderSum(){
   const total=mExp.reduce((s,e)=>s+e.amount,0);
   const tday=exps.filter(e=>localDateStr(e.date)===todayStr()).reduce((s,e)=>s+e.amount,0);
   const bal=walletBalance();
-  document.getElementById('sTotal').textContent='฿'+fmt(total);
+  renderBudgetCard(mExp);
   document.getElementById('sToday').textContent='฿'+fmt(tday);
   document.getElementById('sDone').textContent=todos.filter(t=>t.done).length;
   document.getElementById('sPend').textContent=todos.filter(t=>!t.done).length;

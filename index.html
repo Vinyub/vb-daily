@@ -1051,16 +1051,67 @@ function renderSum(){
   document.getElementById('sWallet').textContent=(bal<0?'-':'')+'฿'+fmt(Math.abs(bal));
   document.getElementById('sWallet').style.color=bal<0?'var(--coral)':'var(--green)';
   const ct={};mExp.forEach(e=>{ct[e.cat]=(ct[e.cat]||0)+e.amount});
-  const cs=Object.entries(ct).sort((a,b)=>b[1]-a[1]);const mx=cs[0]?cs[0][1]:1;
-  document.getElementById('catBreak').innerHTML=cs.length
-    ?cs.map(([c,a])=>`<div class="cat-row"><div class="cat-dot" style="background:${CC[c]}"></div><div class="cat-nm">${CL[c]}</div><div class="bar-wrap"><div class="bar-inner" style="width:${Math.round(a/mx*100)}%;background:${CC[c]}"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
-    :'<div class="empty">ยังไม่มีข้อมูล</div>';
-  const dt={};mExp.forEach(e=>{const d=e.date.slice(8,10);dt[d]=(dt[d]||0)+e.amount});
-  const ds=Object.entries(dt).sort((a,b)=>+a[0]-+b[0]);const dm=ds.length?Math.max(...ds.map(d=>d[1])):1;
+  const cs=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
+
+  // ── DONUT CHART (SVG, no library) ──
+  const catEl=document.getElementById('catBreak');
+  if(!cs.length){
+    catEl.innerHTML='<div class="empty">ยังไม่มีข้อมูล</div>';
+  } else {
+    const R=52,CIRC=2*Math.PI*R;
+    let offset=0,segs='';
+    cs.forEach(([c,a])=>{
+      const frac=a/total;
+      const len=frac*CIRC;
+      segs+=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${CC[c]}" stroke-width="20" stroke-dasharray="${len} ${CIRC-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"/>`;
+      offset+=len;
+    });
+    const legend=cs.map(([c,a])=>{
+      const pct=Math.round(a/total*100);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
+        <div class="cat-dot" style="background:${CC[c]}"></div>
+        <div class="cat-nm" style="flex:1">${CL[c]}</div>
+        <div style="font-size:11px;color:var(--muted);min-width:34px;text-align:right">${pct}%</div>
+        <div class="cat-amt">฿${fmt(a)}</div>
+      </div>`;
+    }).join('');
+    catEl.innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0">
+        ${segs}
+        <text x="70" y="64" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--muted)">รวม</text>
+        <text x="70" y="82" text-anchor="middle" style="font-size:15px;font-weight:800;fill:var(--text);font-variant-numeric:tabular-nums">฿${fmt(total)}</text>
+      </svg>
+      <div style="flex:1;min-width:180px">${legend}</div>
+    </div>`;
+  }
+
+  // ── BAR CHART รายวัน (SVG) ──
+  const dt={};mExp.forEach(e=>{const d=+localDateStr(e.date).slice(8,10);dt[d]=(dt[d]||0)+e.amount});
+  const ds=Object.entries(dt).sort((a,b)=>+a[0]-+b[0]);
   applyDayBreak();
-  document.getElementById('dayBreak').innerHTML=ds.length
-    ?ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:44px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:var(--gold2)"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('')
-    :'<div class="empty">ยังไม่มีข้อมูล</div>';
+  const dayEl=document.getElementById('dayBreak');
+  if(!ds.length){
+    dayEl.innerHTML='<div class="empty">ยังไม่มีข้อมูล</div>';
+  } else {
+    const dm=Math.max(...ds.map(d=>d[1]));
+    const W=Math.max(300,ds.length*34),H=150,PB=22,PT=18;
+    const bw=Math.min(22,(W-10)/ds.length-8);
+    let bars='';
+    ds.forEach(([d,a],i)=>{
+      const bh=Math.max(3,(a/dm)*(H-PB-PT));
+      const x=8+i*((W-16)/ds.length)+((W-16)/ds.length-bw)/2;
+      const y=H-PB-bh;
+      const isMax=a===dm;
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${isMax?'var(--gold)':'var(--gold2)'}" opacity="${isMax?1:.55}"/>`;
+      bars+=`<text x="${x+bw/2}" y="${H-7}" text-anchor="middle" style="font-size:9px;fill:var(--muted)">${d}</text>`;
+      if(isMax||ds.length<=8){
+        bars+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:8.5px;font-weight:700;fill:var(--secondary);font-variant-numeric:tabular-nums">${a>=1000?(a/1000).toFixed(1)+'k':a}</text>`;
+      }
+    });
+    dayEl.innerHTML=`<div style="overflow-x:auto"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;min-width:100%">${bars}</svg></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">แท่งสีเข้ม = วันที่ใช้เยอะสุด</div>`;
+  }
 }
 
 // ── DARK MODE ─────────────────────────────────────────────

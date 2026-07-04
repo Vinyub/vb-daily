@@ -1098,18 +1098,23 @@ function renderSum(){
     const W=Math.max(300,ds.length*34),H=150,PB=22,PT=18;
     const bw=Math.min(22,(W-10)/ds.length-8);
     let bars='';
+    const mYear=sumM.getFullYear(),mMonth=String(sumM.getMonth()+1).padStart(2,'0');
     ds.forEach(([d,a],i)=>{
       const bh=Math.max(3,(a/dm)*(H-PB-PT));
       const x=8+i*((W-16)/ds.length)+((W-16)/ds.length-bw)/2;
       const y=H-PB-bh;
       const isMax=a===dm;
-      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${isMax?'var(--gold)':'var(--gold2)'}" opacity="${isMax?1:.55}"/>`;
-      bars+=`<text x="${x+bw/2}" y="${H-7}" text-anchor="middle" style="font-size:9px;fill:var(--muted)">${d}</text>`;
+      const fullDate=`${mYear}-${mMonth}-${String(d).padStart(2,'0')}`;
+      const colW=(W-16)/ds.length;
+      // invisible full-height hit area — easy tap target
+      bars+=`<rect x="${8+i*colW}" y="0" width="${colW}" height="${H}" fill="transparent" style="cursor:pointer" onclick="viewDayExpense('${fullDate}')"/>`;
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${isMax?'var(--gold)':'var(--gold2)'}" opacity="${isMax?1:.55}" style="pointer-events:none"/>`;
+      bars+=`<text x="${x+bw/2}" y="${H-7}" text-anchor="middle" style="font-size:9px;fill:var(--muted);pointer-events:none">${d}</text>`;
       if(isMax||ds.length<=8){
-        bars+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:8.5px;font-weight:700;fill:var(--secondary);font-variant-numeric:tabular-nums">${a>=1000?(a/1000).toFixed(1)+'k':a}</text>`;
+        bars+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" style="font-size:8.5px;font-weight:700;fill:var(--secondary);font-variant-numeric:tabular-nums;pointer-events:none">${a>=1000?(a/1000).toFixed(1)+'k':a}</text>`;
       }
     });
-    const listRows=ds.map(([d,a])=>`<div class="cat-row"><div class="cat-nm" style="max-width:52px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:${a===dm?'var(--gold)':'var(--gold2)'};opacity:${a===dm?1:.6}"></div></div><div class="cat-amt">฿${fmt(a)}</div></div>`).join('');
+    const listRows=ds.map(([d,a])=>`<div class="cat-row" style="cursor:pointer" onclick="viewDayExpense('${mYear}-${mMonth}-${String(d).padStart(2,'0')}')"><div class="cat-nm" style="max-width:52px;font-size:12px">วันที่ ${+d}</div><div class="bar-wrap" style="flex:1"><div class="bar-inner" style="width:${Math.round(a/dm*100)}%;background:${a===dm?'var(--gold)':'var(--gold2)'};opacity:${a===dm?1:.6}"></div></div><div class="cat-amt">฿${fmt(a)}</div><div style="font-size:10px;color:var(--muted)">›</div></div>`).join('');
     dayEl.innerHTML=`<div style="overflow-x:auto"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;min-width:100%">${bars}</svg></div>
     <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:right">แท่งสีเข้ม = วันที่ใช้เยอะสุด</div>
     <details style="margin-top:10px">
@@ -1117,6 +1122,15 @@ function renderSum(){
       <div style="margin-top:8px">${listRows}</div>
     </details>`;
   }
+}
+
+// ── DRILL-DOWN: chart bar → expense day view ──
+function viewDayExpense(dateStr){
+  const picker=document.getElementById('datePicker');
+  if(picker)picker.value=dateStr;
+  onDateChange(dateStr);
+  goTab(2);
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ── DARK MODE ─────────────────────────────────────────────

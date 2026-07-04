@@ -526,7 +526,7 @@ async function syncAll(showMsg=true){
     // Pull from Sheets
     // Load bigItems from local cache first
 bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
-const[tR,eR,nR,wR]=await Promise.all([
+const[tR,eR,nR,wR,bR]=await Promise.all([
       sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
     ]);
     // Merge: keep local items not yet in Sheets
@@ -534,6 +534,11 @@ const[tR,eR,nR,wR]=await Promise.all([
     exps=mergeData(exps,rowsToExps(eR));
     notes=mergeData(notes,rowsToNotes(nR));
     wallets=mergeData(wallets,rowsToWallets(wR));
+    if(bR&&bR.length){
+      const remoteBig=bR.filter(r=>r[0]).map(r=>({id:+r[0],name:String(r[1]),amount:+r[2],date:String(r[3])}));
+      bigItems=mergeData(bigItems,remoteBig);
+      saveBig();
+    }
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
   }catch(e){setSyncStatus('error');showToast('❌ Sync ไม่สำเร็จ')}
   isSyncing=false;
@@ -1023,13 +1028,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
 (async()=>{
   // Show loading overlay while fetching from Sheets
   try{
-    const[tR,eR,nR,wR]=await Promise.all([
-      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets')
+    const[tR,eR,nR,wR,bR]=await Promise.all([
+      sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets'),sheetRead('bigitems')
     ]);
     todos=rowsToTodos(tR);
     exps=rowsToExps(eR);
     notes=rowsToNotes(nR);
     wallets=rowsToWallets(wR);
+    if(bR&&bR.length)bigItems=bR.filter(r=>r[0]).map(r=>({id:+r[0],name:String(r[1]),amount:+r[2],date:String(r[3])}));
+    saveBig();
     saveCache();setSyncStatus('ok');showToast('✅ โหลดข้อมูลสำเร็จ');
   }catch(e){
     // Fallback to cache if Sheets fails

@@ -281,6 +281,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 .fab:active{transform:scale(.92)}
 @media(max-width:520px){.fab{right:20px}}
 
+
+/* ── COMMIT 3: MOTION (CSS-only, low risk) ── */
+@media (prefers-reduced-motion: no-preference){
+  /* Tab panel fade-in */
+  .panel.active{animation:panelIn .18s ease-out}
+  @keyframes panelIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  /* List items slide-in — subtle, staggered feel via same short duration */
+  .todo-item,.exp-item,.note-item,.wallet-hist-item{animation:itemIn .2s ease-out backwards}
+  @keyframes itemIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* Bottom sheet slide-up */
+  .overlay.open .sheet{animation:sheetUp .22s cubic-bezier(.32,.72,.35,1)}
+  @keyframes sheetUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+
+  /* Chip + button press feedback */
+  .chip,.btn-main,.btn-plus,.mnav-btn,.sync-btn{transition:transform .12s ease,opacity .12s ease}
+  .chip:active,.btn-main:active,.mnav-btn:active{transform:scale(.95)}
+
+  /* Progress bar smoother */
+  .prog-fill{transition:width .5s cubic-bezier(.25,.8,.25,1)}
+
+  /* Toast pop */
+  .toast.show{animation:toastPop .25s ease-out}
+  @keyframes toastPop{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+  /* Sum cards touch feedback already scale(.96) — add transition */
+  .sum-card{transition:transform .12s ease}
+}
+
 </style>
 </head>
 <body>

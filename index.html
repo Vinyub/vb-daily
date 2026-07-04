@@ -471,9 +471,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <!-- BIG ITEMS -->
   <div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="card-label" style="margin-bottom:0">💎 รายจ่ายก้อนใหญ่ปีนี้</div>
+      <div class="card-label" style="margin-bottom:0;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="toggleBigSection()">💎 รายจ่ายก้อนใหญ่ปีนี้ <span id="bigChev" style="font-size:10px;transition:transform .2s;display:inline-block">▼</span></div>
       <div style="font-size:13px;font-weight:800;color:var(--gold)" id="bigTotal">฿0</div>
     </div>
+    <div id="bigSection">
     <div style="display:flex;gap:6px;margin-bottom:12px">
       <button id="bigSort0" onclick="setBigSort(0)" class="chip active" style="border:1.5px solid var(--border)">📅 วันที่</button>
       <button id="bigSort1" onclick="setBigSort(1)" class="chip" style="border:1.5px solid var(--border)">💰 จำนวนเงิน</button>
@@ -488,6 +489,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
       <button class="btn-main" style="flex:1;padding:11px" onclick="addBigItem()">+ เพิ่ม</button>
     </div>
     <div id="bigList"></div>
+    </div>
   </div>
 </div>
 
@@ -1087,6 +1089,19 @@ function editBigItem(id){
   document.getElementById('editOverlay').classList.add('open');
 }
 let bigSortMode=0; // 0=date desc, 1=amount desc
+let bigCollapsed=localStorage.getItem('vb_big_collapsed')==='1';
+function toggleBigSection(){
+  bigCollapsed=!bigCollapsed;
+  localStorage.setItem('vb_big_collapsed',bigCollapsed?'1':'0');
+  applyBigCollapsed();
+}
+function applyBigCollapsed(){
+  const sec=document.getElementById('bigSection');
+  const chev=document.getElementById('bigChev');
+  if(sec)sec.style.display=bigCollapsed?'none':'block';
+  if(chev)chev.style.transform=bigCollapsed?'rotate(-90deg)':'rotate(0deg)';
+}
+;(()=>{applyBigCollapsed();})();
 function setBigSort(m){
   bigSortMode=m;
   const b0=document.getElementById('bigSort0'),b1=document.getElementById('bigSort1');

@@ -311,6 +311,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   .sum-card{transition:transform .12s ease}
 }
 
+
+/* ── IMAGE ATTACH (lazy-load) ── */
+.img-upload-zone{border:2px dashed var(--border2);border-radius:var(--rs);padding:13px;text-align:center;cursor:pointer;background:var(--surface2);margin-bottom:10px;font-size:13px;color:var(--secondary)}
+.img-upload-zone:active{border-color:var(--gold)}
+.img-preview{width:100%;border-radius:var(--rs);max-height:160px;object-fit:cover;margin-bottom:10px;border:1px solid var(--border)}
+.img-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:14px}
+.img-lightbox.open{display:flex}
+.img-lightbox img{max-width:92%;max-height:82vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.img-badge{font-size:13px;cursor:pointer;padding:2px 4px}
+
 </style>
 </head>
 <body>
@@ -320,6 +330,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
   <div class="loading-txt">กำลังโหลดข้อมูล...</div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="img-lightbox" id="imgLightbox" onclick="this.classList.remove('open')">
+  <div id="lightboxSpin" style="color:#fff;font-size:14px">⏳ กำลังโหลดรูป...</div>
+  <img id="lightboxImg" src="" alt="" style="display:none">
+</div>
 
 <!-- HEADER -->
 <div class="hdr">
@@ -594,12 +608,12 @@ async function sheetWrite(tab,rows){
     body:body
   });
 }
-function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts])}
-function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:String(x[4])==='1',ts:String(x[5])}))}
-function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash'])}
-function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash')}))}
-function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts])}
-function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4])}))}
+function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts,t.img||''])}
+function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:String(x[4])==='1',ts:String(x[5]),img:String(x[6]||'')}))}
+function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash',e.img||''])}
+function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash'),img:String(x[6]||'')}))}
+function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts,n.img||''])}
+function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4]),img:String(x[5]||'')}))}
 function walletsToRows(a){return a.map(w=>[w.id,w.amount,w.note,w.ts])}
 function rowsToWallets(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],note:String(x[2]),ts:String(x[3])}))}
 
@@ -618,7 +632,7 @@ async function syncAll(showMsg=true){
     await sheetWrite('expenses',expsToRows(exps));
     await sheetWrite('notes',notesToRows(notes));
     await sheetWrite('wallets',walletsToRows(wallets));
-    await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]));
+    await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']));
     // 2) PULL back to confirm
     const[tR,eR,nR,wR,bR]=await Promise.all([
       sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets'),sheetRead('bigitems')
@@ -628,7 +642,7 @@ async function syncAll(showMsg=true){
     notes=rowsToNotes(nR);
     wallets=rowsToWallets(wR);
     if(bR&&bR.length){
-      bigItems=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr};});
+      bigItems=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr,img:String(r[4]||'')};});
       saveBig();
     }
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
@@ -692,7 +706,7 @@ function closeOverlay(){document.getElementById('editOverlay').classList.remove(
 
 // ── TODO ──────────────────────────────────────────────────
 async function togTodo(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;renderTodo();updateStatStrip();await pushTodos()}}
-async function delTodo(id){todos=todos.filter(x=>x.id!==id);renderTodo();updateStatStrip();await pushTodos();showToast('🗑 ลบแล้ว')}
+async function delTodo(id){const it=todos.find(x=>x.id===id);if(it&&it.img==='1')deleteImage(String(id));todos=todos.filter(x=>x.id!==id);renderTodo();updateStatStrip();await pushTodos();showToast('🗑 ลบแล้ว')}
 function setF(f,el){filt=f;document.querySelectorAll('#tFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTodo()}
 let doneCollapsed=true;
 function toggleDoneSection(){
@@ -712,7 +726,7 @@ function todoItemHtml(t,tagIcon,priColor,priLabel){
         <span class="bdg bdg-${t.tag}">${TL[t.tag]}</span>
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${priColor[t.pri]}18;color:${priColor[t.pri]}">${priLabel[t.pri]}</span>
       </div>
-      <div class="t-ts">🕐 ${fmtDt(t.ts)}</div>
+      <div class="t-ts">🕐 ${fmtDt(t.ts)}${t.img==='1'?` · <span class="img-badge" onclick="event.stopPropagation();viewImage('${t.id}')">📷</span>`:''}</div>
     </div>
     <div class="item-actions">
       <button class="edit-btn" onclick="openEditSheet('todo',${t.id})">✏️</button>
@@ -766,7 +780,7 @@ function renderTodo(){
 }
 
 // ── EXPENSE ───────────────────────────────────────────────
-async function delExp(id){exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
+async function delExp(id){const it=exps.find(x=>x.id===id);if(it&&it.img==='1')deleteImage(String(id));exps=exps.filter(x=>x.id!==id);renderExp();renderWallet();renderSum();updateStatStrip();await pushExps();showToast('🗑 ลบแล้ว')}
 let expPeriodMode=0;
 
 function setPeriodMode(m){
@@ -810,7 +824,7 @@ function renderExpList(arr,el){
     out+=`<div class="cat-dot" style="background:${CC[e.cat]}"></div>`;
     out+=`<div class="e-body">`;
     out+=`<div class="e-note">${esc(e.note)}</div>`;
-    out+=`<div class="e-meta">${CL[e.cat]} &middot; <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> &middot; ${fmtDt(e.date)}</div>`;
+    out+=`<div class="e-meta">${CL[e.cat]} &middot; <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> &middot; ${fmtDt(e.date)}${e.img==='1'?` &middot; <span class="img-badge" onclick="event.stopPropagation();viewImage('${e.id}')">📷</span>`:''}</div>`;
     out+=`</div>`;
     out+=`<div class="e-amt">฿${fmt(e.amount)}</div>`;
     out+=`<div class="e-actions">`;
@@ -899,7 +913,7 @@ async function onNoteImgSelect(input){
   document.getElementById('noteImgPreviewWrap').style.display='block';
   document.getElementById('noteImgPlaceholder').textContent='เปลี่ยนรูป';
 }
-async function delNote(id){notes=notes.filter(x=>x.id!==id);renderNotes();updateStatStrip();await pushNotes();showToast('🗑 ลบแล้ว')}
+async function delNote(id){const it=notes.find(x=>x.id===id);if(it&&it.img==='1')deleteImage(String(id));notes=notes.filter(x=>x.id!==id);renderNotes();updateStatStrip();await pushNotes();showToast('🗑 ลบแล้ว')}
 function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes()}
 // Track expanded notes
 const expandedNotes=new Set();
@@ -938,10 +952,10 @@ function renderNotes(){
     // Title always visible
     noteHtml+=`<div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.title)}</div>`;
     // Preview line when collapsed, meta when expanded
-    if(!isExp&&preview){
-      noteHtml+=`<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(preview)}</div>`;
+    if(!isExp&&(preview||n.img==='1')){
+      noteHtml+=`<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.img==='1'?'📷 ':''}${esc(preview)}</div>`;
     } else {
-      noteHtml+=`<div style="font-size:11px;color:var(--muted);margin-top:2px">${NTL[n.tag]} · 🕐 ${fmtDt(n.ts)}</div>`;
+      noteHtml+=`<div style="font-size:11px;color:var(--muted);margin-top:2px">${NTL[n.tag]} · 🕐 ${fmtDt(n.ts)}${n.img==='1'?` · <span class="img-badge" onclick="event.stopPropagation();viewImage('${n.id}')">📷</span>`:''}</div>`;
     }
     noteHtml+=`</div>`;
     // Actions + chevron
@@ -954,6 +968,9 @@ function renderNotes(){
     noteHtml+=`<div id="nbody-${n.id}" style="overflow:hidden;max-height:${isExp?'2000px':'0'};transition:max-height .3s ease">`;
     if(n.body){
       noteHtml+=`<div style="padding:12px 13px;font-size:13px;color:var(--secondary);line-height:1.7;white-space:pre-wrap;word-break:break-word">${esc(n.body)}</div>`;
+    }
+    if(n.img==='1'){
+      noteHtml+=`<div style="padding:0 13px 12px"><button onclick="event.stopPropagation();viewImage('${n.id}')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;color:var(--secondary);cursor:pointer">📷 ดูรูปแนบ</button></div>`;
     }
     noteHtml+=`</div>`;
     noteHtml+=`</div>`;
@@ -972,7 +989,8 @@ function openEditSheet(mode,id){
     <div class="sheet-row">
       <select class="sheet-sel" id="ei_tag"><option value="work" ${t.tag==='work'?'selected':''}>🏢 Work</option><option value="client" ${t.tag==='client'?'selected':''}>🤝 Client</option><option value="personal" ${t.tag==='personal'?'selected':''}>👤 Personal</option><option value="other" ${t.tag==='other'?'selected':''}>📌 Other</option></select>
       <select class="sheet-sel" id="ei_pri"><option value="high" ${t.pri==='high'?'selected':''}>🔴 High</option><option value="med" ${t.pri==='med'?'selected':''}>🟡 Med</option><option value="low" ${t.pri==='low'?'selected':''}>🟢 Low</option></select>
-    </div>`;
+    </div>`+imgAttachHtml(t.img==='1');
+    pendingImg=null;
   }else if(mode==='note'){
     const n=notes.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Note';
@@ -996,14 +1014,16 @@ function openEditSheet(mode,id){
 async function saveEdit(){
   if(editMode==='todo_new'){
     const v=document.getElementById('ei_text').value.trim();if(!v)return;
-    todos.unshift({id:Date.now(),text:v,tag:document.getElementById('ei_tag').value,pri:document.getElementById('ei_pri').value,done:false,ts:new Date().toISOString()});
+    const nt={id:Date.now(),text:v,tag:document.getElementById('ei_tag').value,pri:document.getElementById('ei_pri').value,done:false,ts:new Date().toISOString()};
+    todos.unshift(nt);attachPendingImg(nt,pushTodos);
     closeOverlay();renderTodo();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='exp_new'){
     const a=parseFloat(document.getElementById('ei_eamt').value);if(!a||a<=0){document.getElementById('ei_eamt').focus();return}
     const cat=document.getElementById('ei_ecat').value;
     const note=document.getElementById('ei_enote').value.trim()||CL[cat].replace(/^\S+ /,'');
     const pay=document.getElementById('ei_epay').value;
-    exps.unshift({id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay});
+    const ne={id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay};
+    exps.unshift(ne);attachPendingImg(ne,pushExps);
     closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='wallet_new'){
     const a=parseFloat(document.getElementById('ei_wamt').value);if(!a||a<=0){document.getElementById('ei_wamt').focus();return}
@@ -1014,6 +1034,7 @@ async function saveEdit(){
     const t=todos.find(x=>x.id===editId);if(!t)return;
     t.text=document.getElementById('ei_text').value.trim()||t.text;
     t.tag=document.getElementById('ei_tag').value;t.pri=document.getElementById('ei_pri').value;
+    attachPendingImg(t,pushTodos);
     closeOverlay();renderTodo();showToast('💾 กำลังบันทึก...',1500);await pushTodos();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='note_new'){
     const title=document.getElementById('ei_ntitle').value.trim();
@@ -1032,6 +1053,7 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
     e.pay=document.getElementById('ei_epay').value;
+    attachPendingImg(e,pushExps);
     closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='budget'){
     const v=parseFloat(document.getElementById('ei_budget').value)||0;
@@ -1042,10 +1064,11 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     b.name=document.getElementById('ei_bname').value.trim()||b.name;
     b.amount=parseFloat(document.getElementById('ei_bamt').value)||b.amount;
     b.date=document.getElementById('ei_bdate').value||b.date;
+    attachPendingImg(b,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||''])));
     saveBig();closeOverlay();renderBig();
     showToast('💾 กำลังบันทึก...',1500);
     setSyncStatus('syncing');
-    sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]))
+    sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']))
       .then(()=>{setSyncStatus('ok');showToast('✅ บันทึกแล้ว');})
       .catch(()=>setSyncStatus('error'));
   }
@@ -1293,7 +1316,8 @@ async function addBigItem(){
   const amt=parseFloat(document.getElementById('bigAmt').value);
   const date=document.getElementById('bigDate').value||todayStr();
   if(!name||!amt||amt<=0)return;
-  bigItems.unshift({id:Date.now(),name,amount:amt,date});
+  const nb={id:Date.now(),name,amount:amt,date};
+  bigItems.unshift(nb);
   saveBig();
   document.getElementById('bigName').value='';
   document.getElementById('bigAmt').value='';
@@ -1301,15 +1325,16 @@ async function addBigItem(){
   showToast('💎 บันทึกแล้ว');
   // Push to Sheets
   setSyncStatus('syncing');
-  try{await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date]));setSyncStatus('ok');}
+  try{await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']));setSyncStatus('ok');}
   catch(e){setSyncStatus('error');}
 }
 
 function delBigItem(id){
+  const it=bigItems.find(x=>x.id===id);if(it&&it.img==='1')deleteImage(String(id));
   bigItems=bigItems.filter(x=>x.id!==id);
   saveBig();renderBig();
   setSyncStatus('syncing');
-  sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
+  sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||''])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
 }
 
 function editBigItem(id){
@@ -1319,7 +1344,8 @@ function editBigItem(id){
   document.getElementById('editBody').innerHTML=`
     <input class="sheet-inp" id="ei_bname" value="${esc(b.name)}" placeholder="ชื่อรายการ">
     <input type="number" class="sheet-inp" id="ei_bamt" value="${b.amount}" placeholder="จำนวนเงิน">
-    <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">`;
+    <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">`+imgAttachHtml(b.img==='1');
+  pendingImg=null;
   document.getElementById('editOverlay').classList.add('open');
 }
 let bigSortMode=0; // 0=date desc, 1=amount desc
@@ -1416,7 +1442,7 @@ function renderBig(){
     const rankStyle=(bigSortMode===1&&idx<3)?'border:1px solid rgba(212,139,58,.4);':'';
     out+=`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">`;
     out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));${rankStyle}display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>`;
-    out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}</div></div>`;
+    out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}${b.img==='1'?` · <span class="img-badge" onclick="event.stopPropagation();viewImage('${b.id}')">📷</span>`:''}</div></div>`;
     out+=`<div style="font-size:15px;font-weight:800;color:var(--gold);margin-right:4px">฿${fmt(b.amount)}</div>`;
     out+=`<button onclick="editBigItem(${b.id})" style="color:var(--gold);background:none;border:none;cursor:pointer;font-size:14px;padding:2px 5px">✏️</button>`;
     out+=`<button onclick="delBigItem(${b.id})" style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
@@ -1425,6 +1451,82 @@ function renderBig(){
   list.innerHTML=out;
 }
 
+
+
+// ── LAZY IMAGE SYSTEM ─────────────────────────────────────
+let pendingImg=null; // base64 waiting to attach on save
+const imgCache={};   // refId → base64 (session cache)
+
+function compressImg(file,maxW=640){
+  return new Promise(res=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const c=document.createElement('canvas');
+        const ratio=Math.min(maxW/img.width,maxW/img.height,1);
+        c.width=img.width*ratio;c.height=img.height*ratio;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',.62));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+async function onImgSelect(input){
+  if(!input.files[0])return;
+  pendingImg=await compressImg(input.files[0]);
+  const pv=document.getElementById('imgPreview');
+  const ph=document.getElementById('imgZoneLabel');
+  if(pv){pv.src=pendingImg;pv.style.display='block';}
+  if(ph)ph.textContent='📷 เปลี่ยนรูป';
+}
+function imgAttachHtml(hasImg){
+  return `${hasImg?'<div style="font-size:12px;color:var(--green);margin-bottom:8px">📷 มีรูปแนบแล้ว — แนบใหม่จะแทนที่</div>':''}
+  <img id="imgPreview" class="img-preview" src="" style="display:none">
+  <div class="img-upload-zone" onclick="document.getElementById('imgInput').click()"><span id="imgZoneLabel">📷 แนบรูป (ไม่บังคับ)</span></div>
+  <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="onImgSelect(this)">`;
+}
+async function uploadImage(refId,dataUrl){
+  const CH=45000,chunks=[];
+  for(let i=0;i<dataUrl.length;i+=CH)chunks.push(dataUrl.slice(i,i+CH));
+  const body=new URLSearchParams();
+  body.append('action','imgwrite');body.append('refId',refId);body.append('chunks',JSON.stringify(chunks));
+  await fetch(API,{method:'POST',body});
+  imgCache[refId]=dataUrl;
+}
+async function fetchImage(refId){
+  if(imgCache[refId])return imgCache[refId];
+  const r=await fetch(`${API}?action=imgread&refId=${encodeURIComponent(refId)}`);
+  const j=await r.json();
+  const data=j.data||'';
+  if(data)imgCache[refId]=data;
+  return data;
+}
+function deleteImage(refId){
+  const body=new URLSearchParams();
+  body.append('action','imgdel');body.append('refId',refId);
+  fetch(API,{method:'POST',body});
+  delete imgCache[refId];
+}
+async function viewImage(refId){
+  const lb=document.getElementById('imgLightbox');
+  const im=document.getElementById('lightboxImg');
+  const sp=document.getElementById('lightboxSpin');
+  im.style.display='none';sp.style.display='block';sp.textContent='⏳ กำลังโหลดรูป...';
+  lb.classList.add('open');
+  const data=await fetchImage(refId);
+  if(data){im.src=data;im.style.display='block';sp.style.display='none';}
+  else{sp.textContent='❌ ไม่พบรูป';}
+}
+// attach after save: sets flag + uploads in background
+function attachPendingImg(item,pushFn){
+  if(!pendingImg)return;
+  item.img='1';
+  const data=pendingImg;pendingImg=null;
+  uploadImage(String(item.id),data).then(()=>{showToast('📷 รูปอัปโหลดแล้ว');pushFn();}).catch(()=>showToast('⚠️ อัปโหลดรูปไม่สำเร็จ'));
+}
 
 // ── FAB: opens add sheet per current tab ──
 function openAddSheet(){
@@ -1443,7 +1545,8 @@ function openTodoAddSheet(){
     <div class="sheet-row">
       <select class="sheet-sel" id="ei_tag"><option value="work">🏢 Work</option><option value="client">🤝 Client</option><option value="personal">👤 Personal</option><option value="other">📌 Other</option></select>
       <select class="sheet-sel" id="ei_pri"><option value="high">🔴 High</option><option value="med">🟡 Med</option><option value="low">🟢 Low</option></select>
-    </div>`;
+    </div>`+imgAttachHtml(false);
+  pendingImg=null;
   document.getElementById('editOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('ei_text')?.focus(),200);
 }
@@ -1463,7 +1566,8 @@ function openExpAddSheet(){
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px">
       <option value="cash">💵 เงินสด</option><option value="ktc">💳 KTC</option><option value="the1">🌟 The 1</option>
     </select>
-    <div id="sheetWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — ยังบันทึกได้ แต่ Wallet จะติดลบ</div>`;
+    <div id="sheetWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — ยังบันทึกได้ แต่ Wallet จะติดลบ</div>`+imgAttachHtml(false);
+  pendingImg=null;
   document.getElementById('editOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('ei_eamt')?.focus(),200);
 }

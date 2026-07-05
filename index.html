@@ -522,6 +522,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
         <option value="other">📦 อื่นๆ</option>
         <option value="edc">💳 EDC</option>
         <option value="patches">🎖 Patches</option>
+        <option value="home">🏠 บ้าน</option>
+        <option value="gadget">📱 Gadget</option>
+        <option value="family">👨‍👩‍👧 ครอบครัว</option>
+        <option value="car">🚗 รถ</option>
         <option value="shopping">🛍 ช้อปปิ้ง</option>
         <option value="food">🍜 อาหาร</option>
         <option value="transport">🚕 เดินทาง</option>
@@ -563,8 +567,8 @@ let editMode=null,editId=null,curTab=0;
 let filterDate=null;
 let expViewMonth=new Date();
 
-const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2FA872',shopping:'#D6478A',entertainment:'#C43D2E',edc:'#17A2B8',patches:'#8B8B2A',other:'#9BA3B0'};
-const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',edc:'💳 EDC',patches:'🎖 Patches',other:'📦 อื่นๆ'};
+const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2FA872',shopping:'#D6478A',entertainment:'#C43D2E',edc:'#17A2B8',patches:'#8B8B2A',home:'#B5651D',gadget:'#4C6EF5',family:'#E0529C',car:'#5C6B73',other:'#9BA3B0'};
+const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',edc:'💳 EDC',patches:'🎖 Patches',home:'🏠 บ้าน',gadget:'📱 Gadget',family:'👨‍👩‍👧 ครอบครัว',car:'🚗 รถ',other:'📦 อื่นๆ'};
 const TL={work:'Work',client:'Client',personal:'Personal',other:'Other'};
 const PL={high:'High',med:'Med',low:'Low'};
 const NTC={work:'#3B6FE8',client:'#C8851A',personal:'#6B4FA0',idea:'#2D6A4F',other:'#9BA3B0'};
@@ -1009,7 +1013,7 @@ function openEditSheet(mode,id){
     const e=exps.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Expense';
     body.innerHTML=`<input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}">
-    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="edc" ${e.cat==='edc'?'selected':''}>💳 EDC</option><option value="patches" ${e.cat==='patches'?'selected':''}>🎖 Patches</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
+    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="edc" ${e.cat==='edc'?'selected':''}>💳 EDC</option><option value="patches" ${e.cat==='patches'?'selected':''}>🎖 Patches</option><option value="home" ${e.cat==='home'?'selected':''}>🏠 บ้าน</option><option value="gadget" ${e.cat==='gadget'?'selected':''}>📱 Gadget</option><option value="family" ${e.cat==='family'?'selected':''}>👨‍👩‍👧 ครอบครัว</option><option value="car" ${e.cat==='car'?'selected':''}>🚗 รถ</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
     <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}">
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>
 `;
@@ -1370,6 +1374,10 @@ function editBigItem(id){
       <option value="other" ${(b.cat||'other')==='other'?'selected':''}>📦 อื่นๆ</option>
       <option value="edc" ${b.cat==='edc'?'selected':''}>💳 EDC</option>
       <option value="patches" ${b.cat==='patches'?'selected':''}>🎖 Patches</option>
+      <option value="home" ${b.cat==='home'?'selected':''}>🏠 บ้าน</option>
+      <option value="gadget" ${b.cat==='gadget'?'selected':''}>📱 Gadget</option>
+      <option value="family" ${b.cat==='family'?'selected':''}>👨‍👩‍👧 ครอบครัว</option>
+      <option value="car" ${b.cat==='car'?'selected':''}>🚗 รถ</option>
       <option value="shopping" ${b.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option>
       <option value="food" ${b.cat==='food'?'selected':''}>🍜 อาหาร</option>
       <option value="transport" ${b.cat==='transport'?'selected':''}>🚕 เดินทาง</option>
@@ -1593,6 +1601,8 @@ function openExpAddSheet(){
       <option value="work">💼 งาน</option><option value="health">💊 สุขภาพ</option>
       <option value="shopping">🛍 ช้อปปิ้ง</option><option value="entertainment">🎬 บันเทิง</option>
       <option value="edc">💳 EDC</option><option value="patches">🎖 Patches</option>
+      <option value="home">🏠 บ้าน</option><option value="gadget">📱 Gadget</option>
+      <option value="family">👨‍👩‍👧 ครอบครัว</option><option value="car">🚗 รถ</option>
       <option value="other">📦 อื่นๆ</option>
     </select>
     <input class="sheet-inp" id="ei_enote" placeholder="Note เช่น กาแฟ, แท็กซี่">

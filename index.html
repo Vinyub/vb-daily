@@ -516,10 +516,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
       <input class="inp" id="bigName" placeholder="ชื่อรายการ เช่น Laptop, ตั๋วญี่ปุ่น" style="flex:2;min-width:150px">
       <input type="number" class="inp" id="bigAmt" placeholder="฿" style="flex:1;min-width:80px">
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
       <input type="date" class="inp" id="bigDate" style="flex:1">
-      <button class="btn-main" style="flex:1;padding:11px" onclick="addBigItem()">+ เพิ่ม</button>
+      <select class="sel" id="bigCat" style="flex:1">
+        <option value="other">📦 อื่นๆ</option>
+        <option value="edc">💳 EDC</option>
+        <option value="patches">🎖 Patches</option>
+        <option value="shopping">🛍 ช้อปปิ้ง</option>
+        <option value="food">🍜 อาหาร</option>
+        <option value="transport">🚕 เดินทาง</option>
+        <option value="work">💼 งาน</option>
+        <option value="health">💊 สุขภาพ</option>
+        <option value="entertainment">🎬 บันเทิง</option>
+      </select>
     </div>
+    <button class="btn-main" style="margin-bottom:10px;padding:11px" onclick="addBigItem()">+ เพิ่ม</button>
     <img id="bigImgPreview" class="img-preview" src="" style="display:none">
     <div class="img-upload-zone" onclick="document.getElementById('bigImgInput').click()" style="margin-bottom:12px"><span id="bigImgZoneLabel">📷 แนบรูป (ไม่บังคับ)</span></div>
     <input type="file" id="bigImgInput" accept="image/*" style="display:none" onchange="onBigImgSelect(this)">
@@ -552,8 +563,8 @@ let editMode=null,editId=null,curTab=0;
 let filterDate=null;
 let expViewMonth=new Date();
 
-const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2FA872',shopping:'#D6478A',entertainment:'#C43D2E',other:'#9BA3B0'};
-const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',other:'📦 อื่นๆ'};
+const CC={food:'#E07B39',transport:'#3B6FE8',work:'#8B5CF6',health:'#2FA872',shopping:'#D6478A',entertainment:'#C43D2E',edc:'#17A2B8',patches:'#8B8B2A',other:'#9BA3B0'};
+const CL={food:'🍜 อาหาร',transport:'🚕 เดินทาง',work:'💼 งาน',health:'💊 สุขภาพ',shopping:'🛍 ช้อปปิ้ง',entertainment:'🎬 บันเทิง',edc:'💳 EDC',patches:'🎖 Patches',other:'📦 อื่นๆ'};
 const TL={work:'Work',client:'Client',personal:'Personal',other:'Other'};
 const PL={high:'High',med:'Med',low:'Low'};
 const NTC={work:'#3B6FE8',client:'#C8851A',personal:'#6B4FA0',idea:'#2D6A4F',other:'#9BA3B0'};
@@ -635,7 +646,7 @@ async function syncAll(showMsg=true){
     await sheetWrite('expenses',expsToRows(exps));
     await sheetWrite('notes',notesToRows(notes));
     await sheetWrite('wallets',walletsToRows(wallets));
-    await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']));
+    await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'',b.cat||'other']));
     // 2) PULL back to confirm
     const[tR,eR,nR,wR,bR]=await Promise.all([
       sheetRead('todos'),sheetRead('expenses'),sheetRead('notes'),sheetRead('wallets'),sheetRead('bigitems')
@@ -645,7 +656,7 @@ async function syncAll(showMsg=true){
     notes=rowsToNotes(nR);
     wallets=rowsToWallets(wR);
     if(bR&&bR.length){
-      bigItems=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr,img:String(r[4]||'')};});
+      bigItems=bR.filter(r=>r[0]).map(r=>{const raw=String(r[3]);const d=new Date(raw);const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return {id:+r[0],name:String(r[1]),amount:+r[2],date:dateStr,img:String(r[4]||''),cat:String(r[5]||'other')};});
       saveBig();
     }
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
@@ -998,7 +1009,7 @@ function openEditSheet(mode,id){
     const e=exps.find(x=>x.id===id);
     title.textContent='✏️ แก้ไข Expense';
     body.innerHTML=`<input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}">
-    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
+    <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="edc" ${e.cat==='edc'?'selected':''}>💳 EDC</option><option value="patches" ${e.cat==='patches'?'selected':''}>🎖 Patches</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
     <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}">
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>
 `;
@@ -1060,11 +1071,12 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     b.name=document.getElementById('ei_bname').value.trim()||b.name;
     b.amount=parseFloat(document.getElementById('ei_bamt').value)||b.amount;
     b.date=document.getElementById('ei_bdate').value||b.date;
-    attachPendingImg(b,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||''])));
+    b.cat=document.getElementById('ei_bcat')?.value||b.cat||'other';
+    attachPendingImg(b,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||'',x.cat||'other'])));
     saveBig();closeOverlay();renderBig();
     showToast('💾 กำลังบันทึก...',1500);
     setSyncStatus('syncing');
-    sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']))
+    sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'',b.cat||'other']))
       .then(()=>{setSyncStatus('ok');showToast('✅ บันทึกแล้ว');})
       .catch(()=>setSyncStatus('error'));
   }
@@ -1319,10 +1331,11 @@ async function addBigItem(){
   const name=document.getElementById('bigName').value.trim();
   const amt=parseFloat(document.getElementById('bigAmt').value);
   const date=document.getElementById('bigDate').value||todayStr();
+  const cat=document.getElementById('bigCat')?.value||'other';
   if(!name||!amt||amt<=0){showToast('⚠️ ใส่ชื่อและจำนวนเงินก่อน');return}
-  const nb={id:Date.now(),name,amount:amt,date};
+  const nb={id:Date.now(),name,amount:amt,date,cat};
   bigItems.unshift(nb);
-  attachPendingImg(nb,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||''])));
+  attachPendingImg(nb,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||'',x.cat||'other'])));
   const pv=document.getElementById('bigImgPreview');const ph=document.getElementById('bigImgZoneLabel');
   if(pv)pv.style.display='none';if(ph)ph.textContent='📷 แนบรูป (ไม่บังคับ)';
   const bi=document.getElementById('bigImgInput');if(bi)bi.value='';
@@ -1333,7 +1346,7 @@ async function addBigItem(){
   showToast('💎 บันทึกแล้ว');
   // Push to Sheets
   setSyncStatus('syncing');
-  try{await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'']));setSyncStatus('ok');}
+  try{await sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'',b.cat||'other']));setSyncStatus('ok');}
   catch(e){setSyncStatus('error');}
 }
 
@@ -1342,7 +1355,7 @@ function delBigItem(id){
   bigItems=bigItems.filter(x=>x.id!==id);
   saveBig();renderBig();
   setSyncStatus('syncing');
-  sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||''])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
+  sheetWrite('bigitems',bigItems.map(b=>[b.id,b.name,b.amount,b.date,b.img||'',b.cat||'other'])).then(()=>setSyncStatus('ok')).catch(()=>setSyncStatus('error'));
 }
 
 function editBigItem(id){
@@ -1352,7 +1365,18 @@ function editBigItem(id){
   document.getElementById('editBody').innerHTML=`
     <input class="sheet-inp" id="ei_bname" value="${esc(b.name)}" placeholder="ชื่อรายการ">
     <input type="number" class="sheet-inp" id="ei_bamt" value="${b.amount}" placeholder="จำนวนเงิน">
-    <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">`+imgAttachHtml(b.img==='1');
+    <input type="date" class="sheet-inp" id="ei_bdate" value="${b.date}">
+    <select class="sheet-sel" id="ei_bcat" style="width:100%;margin-bottom:10px">
+      <option value="other" ${(b.cat||'other')==='other'?'selected':''}>📦 อื่นๆ</option>
+      <option value="edc" ${b.cat==='edc'?'selected':''}>💳 EDC</option>
+      <option value="patches" ${b.cat==='patches'?'selected':''}>🎖 Patches</option>
+      <option value="shopping" ${b.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option>
+      <option value="food" ${b.cat==='food'?'selected':''}>🍜 อาหาร</option>
+      <option value="transport" ${b.cat==='transport'?'selected':''}>🚕 เดินทาง</option>
+      <option value="work" ${b.cat==='work'?'selected':''}>💼 งาน</option>
+      <option value="health" ${b.cat==='health'?'selected':''}>💊 สุขภาพ</option>
+      <option value="entertainment" ${b.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option>
+    </select>`+imgAttachHtml(b.img==='1');
   pendingImg=null;
   document.getElementById('editOverlay').classList.add('open');
 }
@@ -1450,7 +1474,7 @@ function renderBig(){
     const rankStyle=(bigSortMode===1&&idx<3)?'border:1px solid rgba(212,139,58,.4);':'';
     out+=`<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">`;
     out+=`<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber-soft),rgba(212,139,58,.1));${rankStyle}display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>`;
-    out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${dateStr}${b.img==='1'?` · <span class="img-badge" onclick="event.stopPropagation();viewImage('${b.id}')">📷</span>`:''}</div></div>`;
+    out+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${esc(b.name)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${CC[b.cat||'other']};display:inline-block"></span>${CL[b.cat||'other']}</span> · ${dateStr}${b.img==='1'?` · <span class="img-badge" onclick="event.stopPropagation();viewImage('${b.id}')">📷</span>`:''}</div></div>`;
     out+=`<div style="font-size:15px;font-weight:800;color:var(--gold);margin-right:4px">฿${fmt(b.amount)}</div>`;
     out+=`<button onclick="editBigItem(${b.id})" style="color:var(--gold);background:none;border:none;cursor:pointer;font-size:14px;padding:2px 5px">✏️</button>`;
     out+=`<button onclick="delBigItem(${b.id})" style="color:var(--muted);background:none;border:none;cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
@@ -1568,6 +1592,7 @@ function openExpAddSheet(){
       <option value="food">🍜 อาหาร</option><option value="transport">🚕 เดินทาง</option>
       <option value="work">💼 งาน</option><option value="health">💊 สุขภาพ</option>
       <option value="shopping">🛍 ช้อปปิ้ง</option><option value="entertainment">🎬 บันเทิง</option>
+      <option value="edc">💳 EDC</option><option value="patches">🎖 Patches</option>
       <option value="other">📦 อื่นๆ</option>
     </select>
     <input class="sheet-inp" id="ei_enote" placeholder="Note เช่น กาแฟ, แท็กซี่">

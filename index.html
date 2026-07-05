@@ -516,10 +516,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
       <input class="inp" id="bigName" placeholder="ชื่อรายการ เช่น Laptop, ตั๋วญี่ปุ่น" style="flex:2;min-width:150px">
       <input type="number" class="inp" id="bigAmt" placeholder="฿" style="flex:1;min-width:80px">
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
       <input type="date" class="inp" id="bigDate" style="flex:1">
       <button class="btn-main" style="flex:1;padding:11px" onclick="addBigItem()">+ เพิ่ม</button>
     </div>
+    <img id="bigImgPreview" class="img-preview" src="" style="display:none">
+    <div class="img-upload-zone" onclick="document.getElementById('bigImgInput').click()" style="margin-bottom:12px"><span id="bigImgZoneLabel">📷 แนบรูป (ไม่บังคับ)</span></div>
+    <input type="file" id="bigImgInput" accept="image/*" style="display:none" onchange="onBigImgSelect(this)">
     <div id="bigList"></div>
     </div>
   </div>
@@ -900,18 +903,11 @@ function openNoteSheet(id){
       <option value="personal">👤 Personal</option><option value="idea">💡 Idea</option>
       <option value="other">📌 Other</option>
     </select></div>
-`;
+`+imgAttachHtml(false);
+    pendingImg=null;
     document.getElementById('editOverlay').classList.add('open');
     setTimeout(()=>document.getElementById('ei_ntitle')?.focus(),200);
   }
-}
-let pendingNoteImg=null;
-async function onNoteImgSelect(input){
-  if(!input.files[0])return;
-  pendingNoteImg=await compressImg(input.files[0]);
-  document.getElementById('noteImgPreview').src=pendingNoteImg;
-  document.getElementById('noteImgPreviewWrap').style.display='block';
-  document.getElementById('noteImgPlaceholder').textContent='เปลี่ยนรูป';
 }
 async function delNote(id){const it=notes.find(x=>x.id===id);if(it&&it.img==='1')deleteImage(String(id));notes=notes.filter(x=>x.id!==id);renderNotes();updateStatStrip();await pushNotes();showToast('🗑 ลบแล้ว')}
 function setNF(f,el){nFilt=f;document.querySelectorAll('#nFilters .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderNotes()}
@@ -1311,13 +1307,25 @@ let bigItems=JSON.parse(localStorage.getItem(BK)||'[]');
 
 function saveBig(){localStorage.setItem(BK,JSON.stringify(bigItems));}
 
+async function onBigImgSelect(input){
+  if(!input.files[0])return;
+  pendingImg=await compressImg(input.files[0]);
+  const pv=document.getElementById('bigImgPreview');
+  const ph=document.getElementById('bigImgZoneLabel');
+  if(pv){pv.src=pendingImg;pv.style.display='block';}
+  if(ph)ph.textContent='📷 เปลี่ยนรูป';
+}
 async function addBigItem(){
   const name=document.getElementById('bigName').value.trim();
   const amt=parseFloat(document.getElementById('bigAmt').value);
   const date=document.getElementById('bigDate').value||todayStr();
-  if(!name||!amt||amt<=0)return;
+  if(!name||!amt||amt<=0){showToast('⚠️ ใส่ชื่อและจำนวนเงินก่อน');return}
   const nb={id:Date.now(),name,amount:amt,date};
   bigItems.unshift(nb);
+  attachPendingImg(nb,()=>sheetWrite('bigitems',bigItems.map(x=>[x.id,x.name,x.amount,x.date,x.img||''])));
+  const pv=document.getElementById('bigImgPreview');const ph=document.getElementById('bigImgZoneLabel');
+  if(pv)pv.style.display='none';if(ph)ph.textContent='📷 แนบรูป (ไม่บังคับ)';
+  const bi=document.getElementById('bigImgInput');if(bi)bi.value='';
   saveBig();
   document.getElementById('bigName').value='';
   document.getElementById('bigAmt').value='';

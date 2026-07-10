@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VB Daily</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VB Daily">
+<meta name="theme-color" content="#3D2B1A">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -416,6 +422,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 
 <!-- EXPENSE -->
 <div class="panel" id="panel-expense">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-inp" id="expSearch" placeholder="ค้นหารายการ เช่น Kobe, กาแฟ, 700..." oninput="renderExp()">
+  </div>
   <div class="card" style="padding:12px 14px"><div class="card-label" id="expTodayLabel">วันนี้</div><div id="expToday"></div></div>
   <div class="card" style="padding:14px">
     <!-- Period mode selector -->
@@ -854,11 +864,23 @@ function renderExpList(arr,el){
   el.innerHTML=out;
 }
 function renderExp(){
+  const q=(document.getElementById('expSearch')?.value||'').trim().toLowerCase();
+  const matchQ=e=>!q||e.note.toLowerCase().includes(q)||String(e.amount).includes(q)||(CL[e.cat]||'').toLowerCase().includes(q);
   const activeDay=filterDate||todayStr();
   document.getElementById('expTodayLabel').textContent=filterDate?fmtDateLabel(filterDate):'วันนี้';
-  renderExpList(exps.filter(e=>localDateStr(e.date)===activeDay),document.getElementById('expToday'));
+  renderExpList(exps.filter(e=>localDateStr(e.date)===activeDay&&matchQ(e)),document.getElementById('expToday'));
   // Period section
   let periodExps=[];
+  if(q){
+    // Search mode: match across ALL months, ignore period mode
+    periodExps=exps.filter(matchQ);
+    const total=periodExps.reduce((s,e)=>s+e.amount,0);
+    const totalEl=document.getElementById('expPeriodTotal');
+    if(totalEl)totalEl.textContent=periodExps.length?`🔍 พบ ${periodExps.length} รายการ (ทุกเดือน) · รวม ฿${fmt(total)}`:'🔍 ไม่พบรายการ';
+    renderExpList(periodExps,document.getElementById('expMonth'));
+    applyExpSection();
+    return;
+  }
   if(expPeriodMode===0){
     periodExps=exps.filter(e=>localDateStr(e.date)===todayStr());
   } else if(expPeriodMode===1){

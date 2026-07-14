@@ -344,7 +344,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses</div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v1407.0730</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -1055,7 +1055,15 @@ async function saveEdit(){
     const cat=document.getElementById('ei_ecat').value;
     const note=document.getElementById('ei_enote').value.trim()||CL[cat].replace(/^\S+ /,'');
     const pay=document.getElementById('ei_epay').value;
-    const ne={id:Date.now(),amount:a,cat,note,date:new Date().toISOString(),pay};
+    const pickedDate=document.getElementById('ei_edate')?.value;
+    let dateIso;
+    if(!pickedDate||pickedDate===todayStr()){
+      dateIso=new Date().toISOString();
+    } else {
+      const [yy,mm,dd]=pickedDate.split('-').map(Number);
+      dateIso=new Date(yy,mm-1,dd,12,0,0).toISOString(); // เที่ยงวันนั้น กัน timezone เพี้ยน
+    }
+    const ne={id:Date.now(),amount:a,cat,note,date:dateIso,pay};
     exps.unshift(ne);attachPendingImg(ne,pushExps);
     closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='wallet_new'){
@@ -1086,6 +1094,12 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
     e.pay=document.getElementById('ei_epay').value;
+    const newD=document.getElementById('ei_edate')?.value;
+    if(newD&&newD!==localDateStr(e.date)){
+      const old=new Date(e.date);
+      const [yy,mm,dd]=newD.split('-').map(Number);
+      e.date=new Date(yy,mm-1,dd,old.getHours(),old.getMinutes(),0).toISOString();
+    }
     attachPendingImg(e,pushExps);
     closeOverlay();renderExp();renderWallet();renderSum();updateStatStrip();showToast('💾 กำลังบันทึก...',1500);await pushExps();showToast('✅ บันทึกแล้ว');
   }else if(editMode==='budget'){
@@ -1631,6 +1645,8 @@ function openExpAddSheet(){
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px">
       <option value="cash">💵 เงินสด</option><option value="ktc">💳 KTC</option><option value="the1">🌟 The 1</option>
     </select>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px">📅 วันที่ (ย้อนหลังได้เผื่อลืมลง)</div>
+    <input type="date" class="sheet-inp" id="ei_edate" value="${todayStr()}" max="${todayStr()}">
     <div id="sheetWarnBar" style="display:none" class="warn-bar">⚠️ ยอดเงินสดไม่พอ — ยังบันทึกได้ แต่ Wallet จะติดลบ</div>`+imgAttachHtml(false);
   pendingImg=null;
   document.getElementById('editOverlay').classList.add('open');

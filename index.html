@@ -346,7 +346,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1345</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1740</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -1636,6 +1636,11 @@ let cards=[];            // {id,month,card,total,due,paid}
 let cardTxCache=null;    // rows [id,month,card,date,desc,amount,cat] — fetched on demand
 let cardViewMonth=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();
 let cardTxOpen=null;     // 'ktc'/'the1' currently expanded
+let cardTxSort='date';   // date | amtDesc | amtAsc | alpha
+function setCardTxSort(s){
+  cardTxSort=s;
+  if(cardTxOpen){const c=cardTxOpen;cardTxOpen=null;toggleCardTx(c);}
+}
 const CARD_LABEL={ktc:'💳 KTC',the1:'🌟 The 1'};
 // Sheets converts 'YYYY-MM' / 'YYYY-MM-DD' strings to Dates — normalize everything read back
 function normMonth(v){const s=String(v);if(/^\d{4}-\d{2}$/.test(s))return s;const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return s;}
@@ -1750,13 +1755,23 @@ async function toggleCardTx(card){
     rows.forEach(r=>{const c=String(r[6]||'other');catSum[c]=(catSum[c]||0)+(+r[5])});
     const catLine=Object.entries(catSum).sort((a,b)=>b[1]-a[1]).slice(0,4)
       .map(([c,a])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:${(CC[c]||'#999')}18;color:${CC[c]||'var(--muted)'};border-radius:10px;padding:2px 8px;font-size:10.5px;font-weight:700">${CL[c]||c} ฿${fmt(Math.round(a))}</span>`).join(' ');
+    const sortChip=(key,label)=>`<button onclick="setCardTxSort('${key}')" class="chip ${cardTxSort===key?'active':''}" style="font-size:10.5px;padding:4px 10px;border:1.5px solid var(--border)">${label}</button>`;
     let list=`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
       <div style="font-size:12px;font-weight:700;color:var(--secondary);margin-bottom:6px">${CARD_LABEL[card]} · ${rows.length} รายการ</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${catLine}</div>`;
-    const sorted=[...rows].sort((a,b)=>String(b[3]).localeCompare(String(a[3])));
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${catLine}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${sortChip('date','📅 วันที่')}${sortChip('amtDesc','💰 มาก→น้อย')}${sortChip('amtAsc','💰 น้อย→มาก')}${sortChip('alpha','🔤 A-Z')}</div>`;
+    const sorted=[...rows].sort((a,b)=>{
+      if(cardTxSort==='amtDesc')return (+b[5])-(+a[5]);
+      if(cardTxSort==='amtAsc')return (+a[5])-(+b[5]);
+      if(cardTxSort==='alpha')return String(a[4]).localeCompare(String(b[4]),'th',{sensitivity:'base'});
+      return String(b[3]).localeCompare(String(a[3]));
+    });
+    let __i=0;
     for(const r of sorted){
       const d=String(r[3]);
-      list+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border)">
+      __i++;
+      const rank=(cardTxSort==='amtDesc'&&__i<=3)?`<span style="font-size:10px;margin-right:2px">${['🥇','🥈','🥉'][__i-1]}</span>`:'';
+      list+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--border)">${rank?'<div style=\"flex-shrink:0\">'+rank+'</div>':''}
         <div style="width:6px;height:6px;border-radius:50%;background:${CC[String(r[6])]||'#9BA3B0'};flex-shrink:0"></div>
         <div style="flex:1;min-width:0"><div style="font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(String(r[4]))}</div><div style="font-size:10px;color:var(--muted)">${+d.slice(8,10)}/${+d.slice(5,7)}</div></div>
         <div style="font-size:12.5px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">฿${fmt(+r[5])}</div>

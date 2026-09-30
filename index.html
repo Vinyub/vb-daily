@@ -59,7 +59,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 .sync-dot.syncing{background:#FFD700;animation:pulse 1s infinite}
 .sync-dot.error{background:#FF6B6B}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.tabs{display:flex;padding-bottom:2px}
+.tabs{display:flex;padding-bottom:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap}
 .tab{flex:1;padding:13px 4px;text-align:center;font-size:14px;font-weight:500;color:rgba(245,232,208,.45);border:none;border-bottom:2.5px solid transparent;background:none;cursor:pointer;transition:all .2s}
 .tab.active{color:#F5E8D0;border-bottom-color:#D48B3A;font-weight:800;border-radius:0 0 4px 4px}
 
@@ -344,7 +346,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.0940</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.0945</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -363,7 +365,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     <button class="tab" onclick="goTab(1)">📝 Notes</button>
     <button class="tab" onclick="goTab(2)">฿ Expense</button>
     <button class="tab" onclick="goTab(3)">💰 Wallet</button>
-    <button class="tab" onclick="goTab(4)">📊 Summary</button>
+    <button class="tab" onclick="goTab(4)">💳 Card</button>
+    <button class="tab" onclick="goTab(5)">📊 Summary</button>
   </div>
 </div>
 
@@ -484,7 +487,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
     </div>
   </div>
 
-  <!-- CREDIT CARDS -->
+</div>
+
+<!-- CREDIT CARD -->
+<div class="panel" id="panel-card">
   <div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="card-label" style="margin-bottom:0">💳 บัตรเครดิต</div>
@@ -712,14 +718,15 @@ function onDateChange(val){
 }
 
 // ── TABS + SWIPE ──────────────────────────────────────────
-const TABS=['todo','notes','expense','wallet','summary'];
+const TABS=['todo','notes','expense','wallet','card','summary'];
 function goTab(i){
   curTab=i;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+TABS[i]).classList.add('active');
   document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
-  if(i===4)renderSum();
+  if(i===5)renderSum();
   if(i===3)renderWallet();
+  if(i===4)renderCards();
 }
 let swX=0,swY=0,swStarted=false;
 document.addEventListener('touchstart',e=>{swX=e.touches[0].clientX;swY=e.touches[0].clientY;swStarted=true},{passive:true});
@@ -729,7 +736,7 @@ document.addEventListener('touchend',e=>{
   if(document.getElementById('editOverlay').classList.contains('open'))return;
   const dx=e.changedTouches[0].clientX-swX;
   const dy=Math.abs(e.changedTouches[0].clientY-swY);
-  if(Math.abs(dx)>60&&dy<100){if(dx<0&&curTab<4)goTab(curTab+1);else if(dx>0&&curTab>0)goTab(curTab-1)}
+  if(Math.abs(dx)>60&&dy<100){if(dx<0&&curTab<5)goTab(curTab+1);else if(dx>0&&curTab>0)goTab(curTab-1)}
 },{passive:true});
 
 function renderAll(){renderTodo();renderNotes();renderExp();renderWallet();renderSum();renderBig();updateStatStrip()}
@@ -918,7 +925,6 @@ function renderExp(){
 // ── WALLET ────────────────────────────────────────────────
 async function delWallet(id){wallets=wallets.filter(x=>x.id!==id);renderWallet();updateStatStrip();await pushWallets();showToast('🗑 ลบแล้ว')}
 function renderWallet(){
-  renderCards();
   const bal=walletBalance();
   const totalIn=wallets.reduce((s,w)=>s+w.amount,0);
   const totalOut=exps.filter(e=>e.pay==='cash').reduce((s,e)=>s+e.amount,0);
@@ -1755,6 +1761,7 @@ function openAddSheet(){
   else if(curTab===1)openNoteSheet(null);
   else if(curTab===2)openExpAddSheet();
   else if(curTab===3)openWalletAddSheet();
+  else if(curTab===4)openCardImportSheet();
   else openExpAddSheet(); // summary defaults to expense
 }
 

@@ -346,7 +346,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1150</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1310</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -652,10 +652,12 @@ async function sheetWrite(tab,rows){
   body.append('action','write');
   body.append('tab',tab);
   body.append('data',JSON.stringify(rows));
-  await fetch(API,{
+  const _r=await fetch(API,{
     method:'POST',
     body:body
   });
+  try{const j=await _r.json();if(j&&j.ok===false)throw new Error(j.error||'write failed');}
+  catch(e){if(e&&e.message&&!/JSON|token|Unexpected/i.test(e.message))throw e;}
 }
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts,t.img||''])}
 function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:String(x[4])==='1',ts:String(x[5]),img:String(x[6]||'')}))}
@@ -1635,7 +1637,11 @@ let cardTxCache=null;    // rows [id,month,card,date,desc,amount,cat] — fetche
 let cardViewMonth=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();
 let cardTxOpen=null;     // 'ktc'/'the1' currently expanded
 const CARD_LABEL={ktc:'💳 KTC',the1:'🌟 The 1'};
-function rowsToCards(r){return (r||[]).filter(x=>x[0]).map(x=>({id:+x[0],month:String(x[1]),card:String(x[2]),total:+x[3],due:String(x[4]||''),paid:String(x[5])==='1'}))}
+// Sheets converts 'YYYY-MM' / 'YYYY-MM-DD' strings to Dates — normalize everything read back
+function normMonth(v){const s=String(v);if(/^\d{4}-\d{2}$/.test(s))return s;const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return s;}
+function normDay(v){const s=String(v);if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;const d=new Date(s);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return s;}
+function normCardTxRows(rows){return (rows||[]).filter(r=>r&&r[0]).map(r=>[r[0],normMonth(r[1]),String(r[2]),normDay(r[3]),String(r[4]),+r[5],String(r[6]||'other')]);}
+function rowsToCards(r){return (r||[]).filter(x=>x[0]).map(x=>({id:+x[0],month:normMonth(x[1]),card:String(x[2]),total:+x[3],due:x[4]?normDay(x[4]):'',paid:String(x[5])==='1'}))}
 function cardsToRows(a){return a.map(c=>[c.id,c.month,c.card,c.total,c.due,c.paid?'1':'0'])}
 async function loadCards(){
   try{const r=await sheetRead('cards');cards=rowsToCards(r);renderCards();}catch(e){}
@@ -1655,7 +1661,9 @@ function renderCards(){
   const el=document.getElementById('cardCards');
   const mCards=cards.filter(c=>c.month===cardViewMonth);
   if(!mCards.length){
-    el.innerHTML='<div class="empty" style="padding:14px 0"><div class="empty-ic">💳</div>ยังไม่มี statement เดือนนี้<br><span style="font-size:12px">กด 📥 Import เพื่อเพิ่ม</span></div>';
+    const otherMonths=[...new Set(cards.map(c=>c.month))].sort().reverse();
+    const hint=otherMonths.length?`<br><span style="font-size:12px;color:var(--gold);font-weight:700">มีข้อมูล: ${otherMonths.map(m=>{const[yy,mm]=m.split('-');return MONTHS[+mm-1]+' '+(+yy+543)}).join(' · ')} — ใช้ ‹ › เลื่อนดู</span>`:'<br><span style="font-size:12px">กด 📥 Import เพื่อเพิ่ม</span>';
+    el.innerHTML='<div class="empty" style="padding:14px 0"><div class="empty-ic">💳</div>ยังไม่มี statement เดือนนี้'+hint+'</div>';
     return;
   }
   const today=todayStr();
@@ -1695,7 +1703,7 @@ async function toggleCardTx(card){
   cardTxOpen=card;renderCards();
   el.innerHTML='<div style="text-align:center;padding:14px;font-size:12px;color:var(--muted)">⏳ กำลังโหลดรายการ...</div>';
   try{
-    if(!cardTxCache)cardTxCache=(await sheetRead('cardtx'))||[];
+    if(!cardTxCache)cardTxCache=normCardTxRows(await sheetRead('cardtx'));
     const rows=cardTxCache.filter(r=>r[0]&&String(r[1])===cardViewMonth&&String(r[2])===card);
     if(!rows.length){el.innerHTML='<div class="empty" style="padding:12px 0">ไม่มีรายการ</div>';return;}
     // group by category for mini summary
@@ -1755,7 +1763,7 @@ async function importCardData(){
     await sheetWrite('cards',cardsToRows(cards));
     // merge transactions
     if(Array.isArray(data.tx)&&data.tx.length){
-      if(!cardTxCache){try{cardTxCache=(await sheetRead('cardtx'))||[];}catch(e){cardTxCache=[];}}
+      if(!cardTxCache){try{cardTxCache=normCardTxRows(await sheetRead('cardtx'));}catch(e){cardTxCache=[];}}
       const impCards=data.cards.map(n=>n.card);
       cardTxCache=cardTxCache.filter(r=>!(String(r[1])===data.month&&impCards.includes(String(r[2]))));
       data.tx.forEach((t,i)=>cardTxCache.push([Date.now()+1000+i,data.month,t[0],t[1],t[2],+t[3],t[4]||'other']));

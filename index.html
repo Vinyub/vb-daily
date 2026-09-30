@@ -346,7 +346,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1310</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1345</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -1643,8 +1643,44 @@ function normDay(v){const s=String(v);if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
 function normCardTxRows(rows){return (rows||[]).filter(r=>r&&r[0]).map(r=>[r[0],normMonth(r[1]),String(r[2]),normDay(r[3]),String(r[4]),+r[5],String(r[6]||'other')]);}
 function rowsToCards(r){return (r||[]).filter(x=>x[0]).map(x=>({id:+x[0],month:normMonth(x[1]),card:String(x[2]),total:+x[3],due:x[4]?normDay(x[4]):'',paid:String(x[5])==='1'}))}
 function cardsToRows(a){return a.map(c=>[c.id,c.month,c.card,c.total,c.due,c.paid?'1':'0'])}
+function dedupeCards(list){
+  const map=new Map();
+  for(const c of list){
+    const k=c.month+'|'+c.card;
+    if(map.has(k)){const ex=map.get(k);ex.paid=ex.paid||c.paid;}
+    else map.set(k,{...c});
+  }
+  return [...map.values()];
+}
 async function loadCards(){
-  try{const r=await sheetRead('cards');cards=rowsToCards(r);renderCards();}catch(e){}
+  try{
+    const r=await sheetRead('cards');
+    const parsed=rowsToCards(r);
+    cards=dedupeCards(parsed);
+    if(cards.length!==parsed.length){ // self-heal: clean duplicates in Sheets
+      try{await sheetWrite('cards',cardsToRows(cards));showToast('🧹 ลบ statement ซ้ำให้แล้ว '+(parsed.length-cards.length)+' รายการ');}catch(e){}
+    }
+    renderCards();
+  }catch(e){}
+}
+async function deleteCard(id){
+  const c=cards.find(x=>x.id===id);if(!c)return;
+  cards=cards.filter(x=>x.id!==id);
+  cardTxOpen=null;const txl=document.getElementById('cardTxList');if(txl)txl.innerHTML='';
+  renderCards();
+  setSyncStatus('syncing');
+  try{
+    await sheetWrite('cards',cardsToRows(cards));
+    // remove its transactions too (only if no other entry of same month+card remains)
+    if(!cards.some(x=>x.month===c.month&&x.card===c.card)){
+      if(!cardTxCache){try{cardTxCache=normCardTxRows(await sheetRead('cardtx'));}catch(e){cardTxCache=null;}}
+      if(cardTxCache){
+        cardTxCache=cardTxCache.filter(r=>!(String(r[1])===c.month&&String(r[2])===c.card));
+        await sheetWrite('cardtx',cardTxCache);
+      }
+    }
+    setSyncStatus('ok');showToast('🗑 ลบ '+(CARD_LABEL[c.card]||c.card)+' '+c.month+' แล้ว');
+  }catch(e){setSyncStatus('error');showToast('❌ ลบไม่สำเร็จ ลองใหม่');}
 }
 function chgCardM(d){
   const [y,m]=cardViewMonth.split('-').map(Number);
@@ -1677,7 +1713,10 @@ function renderCards(){
     out+=`<div style="flex:1;min-width:150px;border:1.5px solid ${statusColor}55;border-left:4px solid ${statusColor};border-radius:var(--rs);padding:11px 12px;cursor:pointer;background:var(--surface2)" onclick="toggleCardTx('${c.card}')">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:12px;font-weight:700;color:var(--secondary)">${CARD_LABEL[c.card]||c.card}</div>
-        <div style="font-size:10px;color:var(--muted)">${cardTxOpen===c.card?'▲':'▼ รายการ'}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="font-size:10px;color:var(--muted)">${cardTxOpen===c.card?'▲':'▼ รายการ'}</div>
+          <button onclick="event.stopPropagation();deleteCard(${c.id})" style="background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1">×</button>
+        </div>
       </div>
       <div style="font-size:19px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;margin:4px 0 2px">฿${fmt(c.total)}</div>
       <div style="font-size:11px;color:var(--muted)">${dueTxt}</div>

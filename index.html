@@ -346,13 +346,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v3009.1740</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v0910.1015</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
           style="font-size:12px;color:#F5E8D0;background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 12px;font-weight:500;cursor:pointer;outline:none;color-scheme:dark;max-width:160px">
         <div id="dateLbl" style="display:none"></div>
       </div>
+      <button onclick="toggleGlobalSearch()" style="background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:#F5E8D0">🔍</button>
       <button onclick="toggleDark()" id="darkBtn" style="background:rgba(245,232,208,.15);border:1px solid rgba(245,232,208,.25);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:#F5E8D0">☀️</button>
       <button class="sync-btn" onclick="syncAll()">
         <div class="sync-dot" id="syncDot"></div>
@@ -576,6 +577,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 
 
 
+<div id="gsPanel" style="display:none;position:fixed;inset:0;background:var(--bg,#FAF6EF);z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="position:sticky;top:0;background:inherit;padding:14px 16px 10px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);z-index:2">
+    <span style="font-size:15px">🔍</span>
+    <input class="inp" id="gsInput" placeholder="ค้นหาทุกอย่าง... เช่น atta, Grab, 700" oninput="runGlobalSearch()" style="flex:1">
+    <button onclick="toggleGlobalSearch()" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 13px;font-size:13px;font-weight:700;color:var(--secondary);cursor:pointer">ปิด</button>
+  </div>
+  <div id="gsResults" style="padding:12px 16px 90px"></div>
+</div>
 <button class="fab" id="fabBtn" onclick="openAddSheet()">+</button>
 
 <!-- EDIT OVERLAY -->
@@ -1829,6 +1838,96 @@ async function importCardData(){
     renderCards();document.getElementById('cardTxList').innerHTML='';
     showToast(`✅ Import แล้ว ${data.cards.length} บัตร · ${txn} รายการ`);
   }catch(e){setSyncStatus('error');showToast('❌ เขียนขึ้น Sheets ไม่สำเร็จ: '+(e&&e.message||'network'),4000);}
+}
+
+
+// ── GLOBAL SEARCH (all tabs) ──────────────────────────────
+let gsCardTxLoaded=false;
+function toggleGlobalSearch(){
+  const p=document.getElementById('gsPanel');
+  const open=p.style.display!=='none';
+  if(open){p.style.display='none';return;}
+  p.style.display='block';
+  // lazy-load card transactions once so they're searchable
+  if(!gsCardTxLoaded&&!cardTxCache){
+    gsCardTxLoaded=true;
+    sheetRead('cardtx').then(r=>{cardTxCache=normCardTxRows(r);runGlobalSearch();}).catch(()=>{});
+  }
+  setTimeout(()=>document.getElementById('gsInput')?.focus(),100);
+  runGlobalSearch();
+}
+function gsGo(tab,fn){
+  document.getElementById('gsPanel').style.display='none';
+  goTab(tab);
+  if(fn)setTimeout(fn,80);
+}
+function gsRow(icon,title,sub,amtHtml,onclick){
+  return `<div onclick="${onclick}" style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer">
+    <div style="font-size:15px;flex-shrink:0;width:24px;text-align:center">${icon}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+      ${sub?`<div style="font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div>`:''}
+    </div>
+    ${amtHtml||''}
+    <div style="font-size:11px;color:var(--muted)">›</div>
+  </div>`;
+}
+function gsSection(label,count,rowsHtml){
+  return `<div style="margin-bottom:14px">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;padding:4px 0;border-bottom:2px solid var(--border)">${label} <span style="opacity:.6">(${count})</span></div>
+    ${rowsHtml}
+  </div>`;
+}
+function runGlobalSearch(){
+  const q=(document.getElementById('gsInput')?.value||'').trim().toLowerCase();
+  const el=document.getElementById('gsResults');
+  if(!q){el.innerHTML='<div class="empty" style="padding:30px 0"><div class="empty-ic">🔍</div>พิมพ์เพื่อค้นหาจากทุก tab<br><span style="font-size:11.5px">Tasks · Notes · Expense · Wallet · Card · ของชิ้นใหญ่</span></div>';return;}
+  const M=s=>String(s??'').toLowerCase().includes(q);
+  const amt=v=>`<div style="font-size:12.5px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;flex-shrink:0">฿${fmt(+v)}</div>`;
+  let out='',total=0;
+
+  // Tasks
+  const tR=todos.filter(t=>M(t.text)||M(TL[t.tag]));
+  if(tR.length){total+=tR.length;out+=gsSection('✓ Tasks',tR.length,tR.slice(0,15).map(t=>gsRow(t.done?'✅':'⬜',esc(t.text),TL[t.tag]+' · '+fmtDt(t.ts),'',`gsGo(0)`)).join(''));}
+
+  // Notes
+  const nR=notes.filter(n=>M(n.title)||M(n.body));
+  if(nR.length){total+=nR.length;out+=gsSection('📝 Notes',nR.length,nR.slice(0,15).map(n=>gsRow('📝',esc(n.title),esc((n.body||'').split('\n')[0].slice(0,70)),'',`gsGo(1,()=>{expandedNotes.add(${n.id});renderNotes();})`)).join(''));}
+
+  // Expenses (all months)
+  const eR=exps.filter(e=>M(e.note)||M(String(e.amount))||M(CL[e.cat]));
+  if(eR.length){
+    total+=eR.length;
+    const eSum=eR.reduce((s,e)=>s+e.amount,0);
+    out+=gsSection('฿ Expense — รวม ฿'+fmt(eSum),eR.length,eR.slice(0,20).map(e=>gsRow('💵',esc(e.note),(CL[e.cat]||'')+' · '+fmtDt(e.date),amt(e.amount),`gsGo(2,()=>{const s=document.getElementById('expSearch');if(s){s.value='${q.replace(/'/g,"\\'")}';renderExp();}})`)).join(''));
+  }
+
+  // Wallet
+  const wR=wallets.filter(w=>M(w.note)||M(String(w.amount)));
+  if(wR.length){total+=wR.length;out+=gsSection('💰 Wallet',wR.length,wR.slice(0,10).map(w=>gsRow('💰',esc(w.note),fmtDt(w.ts),amt(w.amount),`gsGo(3)`)).join(''));}
+
+  // Big Items
+  const bR=bigItems.filter(b=>M(b.name)||M(String(b.amount))||M(CL[b.cat||'other']));
+  if(bR.length){
+    total+=bR.length;
+    const bSum=bR.reduce((s,b)=>s+b.amount,0);
+    out+=gsSection('💎 ของชิ้นใหญ่ — รวม ฿'+fmt(bSum),bR.length,bR.slice(0,15).map(b=>gsRow('💎',esc(b.name),(CL[b.cat||'other']||'')+' · '+b.date,amt(b.amount),`gsGo(5)`)).join(''));
+  }
+
+  // Card transactions
+  if(cardTxCache&&cardTxCache.length){
+    const cR=cardTxCache.filter(r=>M(r[4])||M(String(r[5]))||M(CL[String(r[6])]));
+    if(cR.length){
+      total+=cR.length;
+      const cSum=cR.reduce((s,r)=>s+(+r[5]),0);
+      out+=gsSection('💳 บัตรเครดิต — รวม ฿'+fmt(Math.round(cSum)),cR.length,cR.slice(0,20).map(r=>gsRow(r[2]==='ktc'?'💳':'🌟',esc(String(r[4])),(CARD_LABEL[String(r[2])]||r[2])+' · '+String(r[3]),amt(r[5]),`gsGo(4,()=>{cardViewMonth='${String(r[1])}';renderCards();})`)).join(''));
+    }
+  } else if(!gsCardTxLoaded){
+    out+='<div style="font-size:11px;color:var(--muted);padding:6px 0">⏳ กำลังโหลดรายการบัตร...</div>';
+  }
+
+  el.innerHTML=out||'<div class="empty" style="padding:30px 0"><div class="empty-ic">🔍</div>ไม่พบ "'+esc(q)+'" ในทุก tab</div>';
+  if(out)el.innerHTML='<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">พบ '+total+' รายการ</div>'+el.innerHTML;
 }
 
 // ── FAB: opens add sheet per current tab ──

@@ -133,6 +133,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 .pay-cash{background:var(--green-soft);color:var(--green)}
 .pay-ktc{background:#EEF3FD;color:#2A4A8A}
 .pay-the1{background:var(--amber-soft);color:var(--amber)}
+.pay-xfer{background:#E3F4F1;color:#0E7C6B}
+.new-badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;background:#FDE8EF;color:#C2255C;cursor:pointer}
 .e-amt{font-size:15px;font-weight:800;flex-shrink:0;color:var(--text)}
 .e-actions{display:flex;gap:2px;flex-shrink:0}
 .e-edit{color:var(--gold);background:none;border:none;cursor:pointer;font-size:13px;padding:3px 4px}
@@ -237,6 +239,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 [data-theme="dark"] #statStrip{border-top-color:rgba(212,139,58,.4)}
 /* Badges */
 [data-theme="dark"] .bdg-work{background:rgba(59,111,232,.2);color:#7BA3F0}
+[data-theme="dark"] .pay-xfer{background:rgba(20,184,166,.2);color:#5EEAD4}
+[data-theme="dark"] .new-badge{background:rgba(240,101,149,.2);color:#F783AC}
 [data-theme="dark"] .pay-ktc{background:rgba(59,111,232,.2);color:#7BA3F0}
 /* Big item icon boxes */
 [data-theme="dark"] #bigList > div > div:first-child{background:linear-gradient(135deg,rgba(212,139,58,.22),rgba(212,139,58,.1)) !important}
@@ -346,7 +350,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
-    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v0910.1015</span></div></div>
+    <div><div class="app-title">VB Daily</div><div class="app-sub">Tasks · Notes · Expenses <span style="opacity:.55;font-size:10px">· v1013.1530 Slip</span></div></div>
     <div class="hdr-right">
       <div style="position:relative">
         <input type="date" id="datePicker" onchange="onDateChange(this.value)"
@@ -614,8 +618,9 @@ const PL={high:'High',med:'Med',low:'Low'};
 const NTC={work:'#3B6FE8',client:'#C8851A',personal:'#6B4FA0',idea:'#2D6A4F',other:'#9BA3B0'};
 const NTL={work:'Work',client:'Client',personal:'Personal',idea:'💡 Idea',other:'Other'};
 const NTB={work:'bdg-work',client:'bdg-client',personal:'bdg-personal',idea:'bdg-low',other:'bdg-other'};
-const PAYMAP={cash:'💵 เงินสด',ktc:'💳 KTC',the1:'🌟 The 1'};
-const PAYBDG={cash:'pay-cash',ktc:'pay-ktc',the1:'pay-the1'};
+const PAYMAP={cash:'💵 เงินสด',xfer:'🏦 โอน/QR',ktc:'💳 KTC',the1:'🌟 The 1'};
+const PAYBDG={cash:'pay-cash',xfer:'pay-xfer',ktc:'pay-ktc',the1:'pay-the1'};
+function isCash(p){p=p||'cash';return p==='cash'||p==='xfer'}
 const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const DAYS=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
@@ -636,7 +641,7 @@ function setSyncStatus(s){
 // ── WALLET CALC ───────────────────────────────────────────
 function walletBalance(){
   const totalIn=wallets.reduce((s,w)=>s+w.amount,0);
-  const totalCashOut=exps.filter(e=>e.pay==='cash').reduce((s,e)=>s+e.amount,0);
+  const totalCashOut=exps.filter(e=>isCash(e.pay)).reduce((s,e)=>s+e.amount,0);
   return totalIn-totalCashOut;
 }
 
@@ -670,8 +675,8 @@ async function sheetWrite(tab,rows){
 }
 function todosToRows(a){return a.map(t=>[t.id,t.text,t.tag,t.pri,t.done?'1':'0',t.ts,t.img||''])}
 function rowsToTodos(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],text:String(x[1]),tag:String(x[2]),pri:String(x[3]),done:String(x[4])==='1',ts:String(x[5]),img:String(x[6]||'')}))}
-function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash',e.img||''])}
-function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash'),img:String(x[6]||'')}))}
+function expsToRows(a){return a.map(e=>[e.id,e.amount,e.cat,e.note,e.date,e.pay||'cash',e.img||'',e.ref||'',e.nw||''])}
+function rowsToExps(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],amount:+x[1],cat:String(x[2]),note:String(x[3]),date:String(x[4]),pay:String(x[5]||'cash'),img:String(x[6]||''),ref:String(x[7]||''),nw:String(x[8]||'')}))}
 function notesToRows(a){return a.map(n=>[n.id,n.title,n.body,n.tag,n.ts,n.img||''])}
 function rowsToNotes(r){return r.filter(x=>x[0]).map(x=>({id:+x[0],title:String(x[1]),body:String(x[2]),tag:String(x[3]),ts:String(x[4]),img:String(x[5]||'')}))}
 function walletsToRows(a){return a.map(w=>[w.id,w.amount,w.note,w.ts])}
@@ -708,7 +713,46 @@ async function syncAll(showMsg=true){
     saveCache();setSyncStatus('ok');if(showMsg)showToast('✅ Sync สำเร็จ');renderAll();
   }catch(e){setSyncStatus('error');showToast('❌ Sync ไม่สำเร็จ')}
   isSyncing=false;
+  pullInbox(false);
 }
+// ── SLIP INBOX (Shortcut → Sheet 'inbox' → Expense) ───────
+let inboxBusy=false,lastInboxPull=0;
+function clearNew(id){const e=exps.find(x=>x.id===id);if(!e)return;e.nw='';renderExp();pushExps()}
+async function pullInbox(silent){
+  if(inboxBusy||isSyncing)return 0;
+  inboxBusy=true;
+  try{
+    const rows=await sheetRead('inbox');
+    const known=new Set(exps.map(e=>e.ref).filter(Boolean));
+    const pend=rows.filter(r=>r&&r[0]&&String(r[6])!=='1'&&String(r[6])!=='E');
+    const ackRefs=[];let added=0;
+    pend.forEach((r,i)=>{
+      const ref=String(r[0]);
+      ackRefs.push(ref);
+      if(known.has(ref))return;
+      const amt=+r[2];if(!(amt>0))return;
+      const payee=String(r[3]||'').trim(),memo=String(r[4]||'').trim();
+      let cat=String(r[5]||'other');if(!CL[cat])cat='other';
+      const d=new Date(String(r[1]));
+      exps.unshift({id:Date.now()+i,amount:amt,cat,note:(payee||'Slip')+(memo?' · '+memo:''),date:isNaN(d)?new Date().toISOString():d.toISOString(),pay:'xfer',img:'',ref,nw:'1'});
+      known.add(ref);added++;
+    });
+    if(added){
+      exps.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      saveCache();renderExp();renderWallet();renderSum();updateStatStrip();
+      await sheetWrite('expenses',expsToRows(exps));
+    }
+    if(ackRefs.length){
+      try{await fetch(API,{method:'POST',body:new URLSearchParams({action:'inboxack',refs:JSON.stringify(ackRefs)})})}catch(e){}
+    }
+    if(added&&!silent)showToast('🏦 เพิ่มจาก slip '+added+' รายการ');
+    lastInboxPull=Date.now();
+    return added;
+  }catch(e){return 0}
+  finally{inboxBusy=false}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastInboxPull>15000)pullInbox(false)});
+
 async function pushTodos(){saveCache();setSyncStatus('syncing');try{await sheetWrite('todos',todosToRows(todos));setSyncStatus('ok')}catch(e){setSyncStatus('error')}}
 async function pushExps(){saveCache();setSyncStatus('syncing');try{await sheetWrite('expenses',expsToRows(exps));setSyncStatus('ok')}catch(e){setSyncStatus('error')}}
 async function pushNotes(){saveCache();setSyncStatus('syncing');try{await sheetWrite('notes',notesToRows(notes));setSyncStatus('ok')}catch(e){setSyncStatus('error')}}
@@ -885,7 +929,7 @@ function renderExpList(arr,el){
     out+=`<div class="cat-dot" style="background:${CC[e.cat]}"></div>`;
     out+=`<div class="e-body">`;
     out+=`<div class="e-note">${esc(e.note)}</div>`;
-    out+=`<div class="e-meta">${CL[e.cat]} &middot; <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> &middot; ${fmtDt(e.date)}${e.img==='1'?` &middot; <span class="img-badge" onclick="event.stopPropagation();viewImage('${e.id}')">📷</span>`:''}</div>`;
+    out+=`<div class="e-meta">${CL[e.cat]} &middot; <span class="pay-badge ${PAYBDG[e.pay||'cash']}">${PAYMAP[e.pay||'cash']}</span> &middot; ${fmtDt(e.date)}${e.nw==='1'?` &middot; <span class="new-badge" onclick="event.stopPropagation();clearNew(${e.id})">ใหม่</span>`:''}${e.img==='1'?` &middot; <span class="img-badge" onclick="event.stopPropagation();viewImage('${e.id}')">📷</span>`:''}</div>`;
     out+=`</div>`;
     out+=`<div class="e-amt">฿${fmt(e.amount)}</div>`;
     out+=`<div class="e-actions">`;
@@ -938,7 +982,7 @@ async function delWallet(id){wallets=wallets.filter(x=>x.id!==id);renderWallet()
 function renderWallet(){
   const bal=walletBalance();
   const totalIn=wallets.reduce((s,w)=>s+w.amount,0);
-  const totalOut=exps.filter(e=>e.pay==='cash').reduce((s,e)=>s+e.amount,0);
+  const totalOut=exps.filter(e=>isCash(e.pay)).reduce((s,e)=>s+e.amount,0);
   const balEl=document.getElementById('walletBalance');
   balEl.textContent=(bal<0?'-':'')+'฿'+fmt(Math.abs(bal));
   balEl.style.color=bal<0?'#FF8080':'#F5E8D0';
@@ -1070,7 +1114,7 @@ function openEditSheet(mode,id){
     body.innerHTML=`<input type="number" class="sheet-inp" id="ei_eamt" value="${e.amount}">
     <select class="sheet-sel" id="ei_ecat" style="width:100%;margin-bottom:10px"><option value="food" ${e.cat==='food'?'selected':''}>🍜 อาหาร</option><option value="transport" ${e.cat==='transport'?'selected':''}>🚕 เดินทาง</option><option value="work" ${e.cat==='work'?'selected':''}>💼 งาน</option><option value="health" ${e.cat==='health'?'selected':''}>💊 สุขภาพ</option><option value="shopping" ${e.cat==='shopping'?'selected':''}>🛍 ช้อปปิ้ง</option><option value="entertainment" ${e.cat==='entertainment'?'selected':''}>🎬 บันเทิง</option><option value="edc" ${e.cat==='edc'?'selected':''}>💳 EDC</option><option value="patches" ${e.cat==='patches'?'selected':''}>🎖 Patches</option><option value="home" ${e.cat==='home'?'selected':''}>🏠 บ้าน</option><option value="gadget" ${e.cat==='gadget'?'selected':''}>📱 Gadget</option><option value="family" ${e.cat==='family'?'selected':''}>👨‍👩‍👧 ครอบครัว</option><option value="car" ${e.cat==='car'?'selected':''}>🚗 รถ</option><option value="other" ${e.cat==='other'?'selected':''}>📦 อื่นๆ</option></select>
     <input class="sheet-inp" id="ei_enote" value="${esc(e.note)}">
-    <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>
+    <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px"><option value="cash" ${(e.pay||'cash')==='cash'?'selected':''}>💵 เงินสด</option><option value="xfer" ${e.pay==='xfer'?'selected':''}>🏦 โอน/QR</option><option value="ktc" ${e.pay==='ktc'?'selected':''}>💳 KTC</option><option value="the1" ${e.pay==='the1'?'selected':''}>🌟 The 1</option></select>
 `;
     pendingExpImg=e.img||null;
   }
@@ -1127,7 +1171,7 @@ closeOverlay();renderNotes();showToast('💾 กำลังบันทึก..
     e.amount=parseFloat(document.getElementById('ei_eamt').value)||e.amount;
     e.cat=document.getElementById('ei_ecat').value;
     e.note=document.getElementById('ei_enote').value.trim()||e.note;
-    e.pay=document.getElementById('ei_epay').value;
+    e.pay=document.getElementById('ei_epay').value;e.nw='';
     const newD=document.getElementById('ei_edate')?.value;
     if(newD&&newD!==localDateStr(e.date)){
       const old=new Date(e.date);
@@ -1174,7 +1218,7 @@ function renderBudgetCard(mExp){
   const card=document.getElementById('budgetCard');
   if(!card)return;
   const budget=getBudget();
-  const cashSpent=mExp.filter(e=>(e.pay||'cash')==='cash').reduce((s,e)=>s+e.amount,0);
+  const cashSpent=mExp.filter(e=>isCash(e.pay)).reduce((s,e)=>s+e.amount,0);
 
   if(!budget){
     card.innerHTML=`<div class="s-lbl">รายจ่ายเงินสดเดือนนี้</div>
@@ -1970,7 +2014,7 @@ function openExpAddSheet(){
     </select>
     <input class="sheet-inp" id="ei_enote" placeholder="Note เช่น กาแฟ, แท็กซี่">
     <select class="sheet-sel" id="ei_epay" style="width:100%;margin-bottom:10px">
-      <option value="cash">💵 เงินสด</option><option value="ktc">💳 KTC</option><option value="the1">🌟 The 1</option>
+      <option value="cash">💵 เงินสด</option><option value="xfer">🏦 โอน/QR</option><option value="ktc">💳 KTC</option><option value="the1">🌟 The 1</option>
     </select>
     <div style="font-size:11px;color:var(--muted);margin-bottom:4px">📅 วันที่ (ย้อนหลังได้เผื่อลืมลง)</div>
     <input type="date" class="sheet-inp" id="ei_edate" value="${todayStr()}" max="${todayStr()}">
@@ -2011,6 +2055,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
   }
   renderAll();
   document.getElementById('loadingOverlay').classList.add('hide');
+  pullInbox(false);
 })();
 </script>
 </body>
